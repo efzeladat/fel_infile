@@ -153,6 +153,7 @@ class AccountInvoice(models.Model):
                     "es_anulacion": "N"
                 }
                 r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
+                logging.warn(r)
                 firma_json = r.json()
                 if firma_json["resultado"]:
                     logging.warn(base64.b64decode(firma_json["archivo"]))
