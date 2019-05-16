@@ -7,7 +7,7 @@ from odoo.tools.float_utils import float_round
 from datetime import datetime
 import base64
 from lxml import etree
-from signxml import XMLSigner
+#from import XMLSigner
 import requests
 
 import logging
