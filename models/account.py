@@ -40,7 +40,7 @@ class AccountInvoice(models.Model):
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
 
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo="FACT")
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo=factura.journal_id.tipo_documento_fel)
 
                 Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat, NombreComercial=factura.company_id.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
@@ -69,7 +69,9 @@ class AccountInvoice(models.Model):
                 Pais.text = factura.partner_id.country_id.code or 'GT'
 
                 Frases = etree.SubElement(DatosEmision, DTE_NS+"Frases")
-                Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
+                ElementFrases = etree.fromstring(factura.company_id.frases_fel)
+                Frases.append(ElementFrases)
+                #Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
 
                 Items = etree.SubElement(DatosEmision, DTE_NS+"Items")
 
@@ -185,12 +187,9 @@ class AccountJournal(models.Model):
     clave_fel = fields.Char('Clave FEL', copy=False)
     token_firma_fel = fields.Char('Token Firma FEL', copy=False)
     codigo_establecimiento_fel = fields.Char('Codigo Establecimiento FEL', copy=False)
-    # tipo_documento_fel = fields.Selection([('FACE', 'FACE')], 'Tipo de Documento FEL', copy=False)
-    # serie_documento_fel = fields.Selection([('63', '63'),('66', '66')], 'Serie de Documento FEL', copy=False)
-    # serie_fel = fields.Char('Serie FEL', copy=False)
-    # numero_resolucion_fel = fields.Char('Numero Resolucion FEL', copy=False)
-    # fecha_resolucion_fel = fields.Date('Fecha Resolución FEL', copy=False)
-    # rango_inicial_fel = fields.Integer('Rango Inicial FEL', copy=False)
-    # rango_final_fel = fields.Integer('Rango Final FEL', copy=False)
-    # numero_establecimiento_fel = fields.Char('Numero Establecimiento FEL', copy=False)
-    # dispositivo_fel = fields.Char('Dispositivo FEL', copy=False)
+    tipo_documento_fel = fields.Selection([('FACT', 'FACT'), ('FCAM', 'FCAM'), ('FPEQ', 'FPEQ'), ('FCAP', 'FCAP'), ('FESP', 'FESP'), ('NABN', 'NABN'), ('RDON', 'RDON'), ('RECI', 'RECI'), ('NDEB', 'NDEB'), ('NCRE', 'NCRE')], 'Tipo de Documento FEL', copy=False)
+
+class ResCompany(models.Model):
+    _inherit = "res.company"
+
+    frases_fel = fields.Text('Frases FEL')
