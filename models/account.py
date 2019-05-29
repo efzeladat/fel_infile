@@ -7,22 +7,25 @@ from odoo.tools.float_utils import float_round
 from datetime import datetime
 import base64
 from lxml import etree
-#from import XMLSigner
 import requests
+#from import XMLSigner
 
 import logging
 
 class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
-    uuid_fel = fields.Char('Firma FEL', copy=False)
+    firma_fel = fields.Char('Firma FEL', copy=False)
+    serie_fel = fields.Char('Firma FEL', copy=False)
+    numero_fel = fields.Char('Firma FEL', copy=False)
     pdf_fel = fields.Char('PDF FEL', copy=False)
+    factura_original_id = fields.Many2one('account.invoice', string="Factura original FEL")
 
     def invoice_validate(self):
         detalles = []
         subtotal = 0
         for factura in self:
-            if factura.journal_id.usuario_fel and not factura.uuid_fel:
+            if factura.journal_id.usuario_fel and not factura.firma_fel:
                 attr_qname = etree.QName("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation")
 
                 NSMAP = {
@@ -32,15 +35,20 @@ class AccountInvoice(models.Model):
                     "n1": "http://www.altova.com/samplexml/other-namespace",
                 }
 
+                NSMAP_REF = {
+                    "cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
+                }
+
                 DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.1.0}"
                 DS_NS = "{http://www.w3.org/2000/09/xmldsig#}"
+                CNO_NS = "{http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0}"
 
                 GTDocumento = etree.Element(DTE_NS+"GTDocumento", {attr_qname: "http://www.sat.gob.gt/dte/fel/0.1.0"}, Version="0.4", nsmap=NSMAP)
                 SAT = etree.SubElement(GTDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
 
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo="FACT")
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo=factura.journal_id.tipo_documento_fel)
 
                 Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.company_id.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
@@ -68,8 +76,12 @@ class AccountInvoice(models.Model):
                 Pais = etree.SubElement(DireccionReceptor, DTE_NS+"Pais")
                 Pais.text = factura.partner_id.country_id.code or 'GT'
 
-                Frases = etree.SubElement(DatosEmision, DTE_NS+"Frases")
-                Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
+                # Frases = etree.SubElement(DatosEmision, DTE_NS+"Frases")
+                #Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
+
+                if factura.journal_id.tipo_documento_fel not in ['NDEB', 'NCRE']:
+                    ElementoFrases = etree.fromstring(factura.company_id.frases_fel)
+                    DatosEmision.append(ElementoFrases)
 
                 Items = etree.SubElement(DatosEmision, DTE_NS+"Items")
 
@@ -128,6 +140,12 @@ class AccountInvoice(models.Model):
 
                 # Adenda = etree.SubElement(DTE, DTE_NS+"Adenda")
 
+                if factura.journal_id.tipo_documento_fel in ['NDEB', 'NCRE']:
+                    Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
+
+                    Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="ReferenciasNota", NombreComplemento="Nota de Credito" if factura.journal_id.tipo_documento_fel == 'NCRE' else "Nota de Debito", URIComplemento="text")
+                    ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", FechaEmisionDocumentoOrigen=factura.factura_original_id.date_invoice, MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.numero_fel, SerieDocumentoOrigen=factura.factura_original_id.serie_fel, Version="0.0", nsmap=NSMAP_REF)
+
                 xmls = etree.tostring(GTDocumento)
                 xmls_base64 = base64.b64encode(xmls)
                 logging.warn(xmls)
@@ -172,11 +190,15 @@ class AccountInvoice(models.Model):
                     logging.warn(r.json())
                     certificacion_json = r.json()
                     if certificacion_json["resultado"]:
-                        factura.uuid_fel = certificacion_json["uuid"]
-                        factura.name = certificacion_json["serie"]+"-"+str(certificacion_json["numero"])
+                        factura.firma_fel = certificacion_json["uuid"]
+                        factura.name = str(certificacion_json["serie"])+"-"+str(certificacion_json["numero"])
+                        factura.serie_fel = certificacion_json["serie"]
+                        factura.numero_fel = certificacion_json["numero"]
                         factura.pdf_fel =" https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
 
                         return super(AccountInvoice,self).invoice_validate()
+                    else:
+                        raise UserError(str(certificacion_json["descripcion_errores"]))
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
@@ -185,12 +207,9 @@ class AccountJournal(models.Model):
     clave_fel = fields.Char('Clave FEL', copy=False)
     token_firma_fel = fields.Char('Token Firma FEL', copy=False)
     codigo_establecimiento_fel = fields.Char('Codigo Establecimiento FEL', copy=False)
-    # tipo_documento_fel = fields.Selection([('FACE', 'FACE')], 'Tipo de Documento FEL', copy=False)
-    # serie_documento_fel = fields.Selection([('63', '63'),('66', '66')], 'Serie de Documento FEL', copy=False)
-    # serie_fel = fields.Char('Serie FEL', copy=False)
-    # numero_resolucion_fel = fields.Char('Numero Resolucion FEL', copy=False)
-    # fecha_resolucion_fel = fields.Date('Fecha Resolución FEL', copy=False)
-    # rango_inicial_fel = fields.Integer('Rango Inicial FEL', copy=False)
-    # rango_final_fel = fields.Integer('Rango Final FEL', copy=False)
-    # numero_establecimiento_fel = fields.Char('Numero Establecimiento FEL', copy=False)
-    # dispositivo_fel = fields.Char('Dispositivo FEL', copy=False)
+    tipo_documento_fel = fields.Selection([('FACT', 'FACT'), ('FCAM', 'FCAM'), ('FPEQ', 'FPEQ'), ('FCAP', 'FCAP'), ('FESP', 'FESP'), ('NABN', 'NABN'), ('RDON', 'RDON'), ('RECI', 'RECI'), ('NDEB', 'NDEB'), ('NCRE', 'NCRE')], 'Tipo de Documento FEL', copy=False)
+
+class ResCompany(models.Model):
+    _inherit = "res.company"
+
+    frases_fel = fields.Text('Frases FEL')
