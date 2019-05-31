@@ -213,12 +213,12 @@ class AccountInvoice(models.Model):
                         factura.serie_fel = certificacion_json["serie"]
                         factura.numero_fel = certificacion_json["numero"]
                         factura.pdf_fel =" https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
-
-                        return super(AccountInvoice,self).invoice_validate()
                     else:
                         raise UserError(str(certificacion_json["descripcion_errores"]))
                 else:
                     raise UserError(str(r))
+
+        return super(AccountInvoice,self).invoice_validate()
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
