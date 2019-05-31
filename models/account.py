@@ -56,27 +56,27 @@ class AccountInvoice(models.Model):
                 # DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo=factura.journal_id.tipo_documento_fel)
                 DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", Tipo=factura.journal_id.tipo_documento_fel)
 
-                Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat, NombreComercial=factura.company_id.name, NombreEmisor=factura.company_id.name)
+                Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.company_id.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
                 Direccion = etree.SubElement(DireccionEmisor, DTE_NS+"Direccion")
-                Direccion.text = factura.company_id.street or ''
+                Direccion.text = factura.company_id.street or 'Ciudad'
                 CodigoPostal = etree.SubElement(DireccionEmisor, DTE_NS+"CodigoPostal")
-                CodigoPostal.text = factura.company_id.zip or ''
+                CodigoPostal.text = factura.company_id.zip or '01001'
                 Municipio = etree.SubElement(DireccionEmisor, DTE_NS+"Municipio")
-                Municipio.text = factura.company_id.city or ''
+                Municipio.text = factura.company_id.city or 'Guatemala'
                 Departamento = etree.SubElement(DireccionEmisor, DTE_NS+"Departamento")
                 Departamento.text = factura.company_id.state_id.name if factura.company_id.state_id else ''
                 Pais = etree.SubElement(DireccionEmisor, DTE_NS+"Pais")
                 Pais.text = factura.company_id.country_id.code or 'GT'
 
-                Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat, NombreReceptor=factura.partner_id.name)
+                Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.name)
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
                 Direccion = etree.SubElement(DireccionReceptor, DTE_NS+"Direccion")
-                Direccion.text = factura.partner_id.street or ''
+                Direccion.text = factura.partner_id.street or 'Ciutdad'
                 CodigoPostal = etree.SubElement(DireccionReceptor, DTE_NS+"CodigoPostal")
                 CodigoPostal.text = factura.partner_id.zip or '01001'
                 Municipio = etree.SubElement(DireccionReceptor, DTE_NS+"Municipio")
-                Municipio.text = factura.partner_id.city or ''
+                Municipio.text = factura.partner_id.city or 'Guatemala'
                 Departamento = etree.SubElement(DireccionReceptor, DTE_NS+"Departamento")
                 Departamento.text = factura.partner_id.state_id.name if factura.partner_id.state_id else ''
                 Pais = etree.SubElement(DireccionReceptor, DTE_NS+"Pais")
@@ -183,7 +183,7 @@ class AccountInvoice(models.Model):
                 data = {
                     "llave": factura.journal_id.token_firma_fel,
                     "archivo": xmls_base64,
-                    "codigo": factura.company_id.vat,
+                    "codigo": factura.company_id.vat.replace('-',''),
                     "alias": factura.journal_id.usuario_fel,
                     "es_anulacion": "N"
                 }
@@ -196,11 +196,11 @@ class AccountInvoice(models.Model):
                     headers = {
                         "USUARIO": factura.journal_id.usuario_fel,
                         "LLAVE": factura.journal_id.clave_fel,
-                        "IDENTIFICADOR": 100000000+factura.id,
+                        "IDENTIFICADOR": str(100000000+factura.id),
                         "Content-Type": "application/json",
                     }
                     data = {
-                        "nit_emisor": factura.company_id.vat,
+                        "nit_emisor": factura.company_id.vat.replace('-',''),
                         "correo_copia": factura.company_id.email,
                         "xml_dte": firma_json["archivo"]
                     }
@@ -219,7 +219,6 @@ class AccountInvoice(models.Model):
                         raise UserError(str(certificacion_json["descripcion_errores"]))
                 else:
                     raise UserError(str(r))
-
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
