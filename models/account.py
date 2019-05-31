@@ -39,16 +39,22 @@ class AccountInvoice(models.Model):
                     "cno": "http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0",
                 }
 
+                NSMAP_ABONO = {
+                    "cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
+                }
+
                 DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.1.0}"
                 DS_NS = "{http://www.w3.org/2000/09/xmldsig#}"
                 CNO_NS = "{http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0}"
+                CFC_NS = "{http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0}"
 
                 GTDocumento = etree.Element(DTE_NS+"GTDocumento", {attr_qname: "http://www.sat.gob.gt/dte/fel/0.1.0"}, Version="0.4", nsmap=NSMAP)
                 SAT = etree.SubElement(GTDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
 
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo=factura.journal_id.tipo_documento_fel)
+                # DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo=factura.journal_id.tipo_documento_fel)
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", Tipo=factura.journal_id.tipo_documento_fel)
 
                 Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat, NombreComercial=factura.company_id.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
@@ -142,9 +148,20 @@ class AccountInvoice(models.Model):
 
                 if factura.journal_id.tipo_documento_fel in ['NDEB', 'NCRE']:
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
-
                     Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="ReferenciasNota", NombreComplemento="Nota de Credito" if factura.journal_id.tipo_documento_fel == 'NCRE' else "Nota de Debito", URIComplemento="text")
                     ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", FechaEmisionDocumentoOrigen=factura.factura_original_id.date_invoice, MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.numero_fel, SerieDocumentoOrigen=factura.factura_original_id.serie_fel, Version="0.0", nsmap=NSMAP_REF)
+
+                if factura.journal_id.tipo_documento_fel in ['FCAM']:
+                    Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
+                    Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="FCAM", NombreComplemento="AbonosFacturaCambiaria", URIComplemento="#AbonosFacturaCambiaria")
+                    AbonosFacturaCambiaria = etree.SubElement(Complemento, CFC_NS+"AbonosFacturaCambiaria", Version="1", nsmap=NSMAP_ABONO)
+                    Abono = etree.SubElement(AbonosFacturaCambiaria, CFC_NS+"Abono")
+                    NumeroAbono = etree.SubElement(Abono, CFC_NS+"NumeroAbono")
+                    NumeroAbono.text = "1"
+                    FechaVencimiento = etree.SubElement(Abono, CFC_NS+"FechaVencimiento")
+                    FechaVencimiento.text = str(factura.date_due)
+                    MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
+                    MontoAbono.text = str(gran_total)
 
                 xmls = etree.tostring(GTDocumento)
                 xmls_base64 = base64.b64encode(xmls)
@@ -171,7 +188,7 @@ class AccountInvoice(models.Model):
                     "es_anulacion": "N"
                 }
                 r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
-                logging.warn(r)
+                logging.warn(r.json())
                 firma_json = r.json()
                 if firma_json["resultado"]:
                     logging.warn(base64.b64decode(firma_json["archivo"]))
@@ -200,6 +217,8 @@ class AccountInvoice(models.Model):
                         return super(AccountInvoice,self).invoice_validate()
                     else:
                         raise UserError(str(certificacion_json["descripcion_errores"]))
+                else:
+                    raise UserError(str(r))
 
 
 class AccountJournal(models.Model):
