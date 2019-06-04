@@ -59,20 +59,20 @@ class AccountInvoice(models.Model):
                 Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.company_id.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
                 Direccion = etree.SubElement(DireccionEmisor, DTE_NS+"Direccion")
-                Direccion.text = factura.company_id.street or 'Ciudad'
+                Direccion.text = factura.journal_id.direccion.street or 'Ciudad'
                 CodigoPostal = etree.SubElement(DireccionEmisor, DTE_NS+"CodigoPostal")
-                CodigoPostal.text = factura.company_id.zip or '01001'
+                CodigoPostal.text = factura.journal_id.direccion.zip or '01001'
                 Municipio = etree.SubElement(DireccionEmisor, DTE_NS+"Municipio")
-                Municipio.text = factura.company_id.city or 'Guatemala'
+                Municipio.text = factura.journal_id.direccion.city or 'Guatemala'
                 Departamento = etree.SubElement(DireccionEmisor, DTE_NS+"Departamento")
-                Departamento.text = factura.company_id.state_id.name if factura.company_id.state_id else ''
+                Departamento.text = factura.journal_id.direccion.state_id.name if factura.journal_id.direccion.state_id else ''
                 Pais = etree.SubElement(DireccionEmisor, DTE_NS+"Pais")
-                Pais.text = factura.company_id.country_id.code or 'GT'
+                Pais.text = factura.journal_id.direccion.country_id.code or 'GT'
 
                 Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.name)
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
                 Direccion = etree.SubElement(DireccionReceptor, DTE_NS+"Direccion")
-                Direccion.text = factura.partner_id.street or 'Ciutdad'
+                Direccion.text = factura.partner_id.street or 'Ciudad'
                 CodigoPostal = etree.SubElement(DireccionReceptor, DTE_NS+"CodigoPostal")
                 CodigoPostal.text = factura.partner_id.zip or '01001'
                 Municipio = etree.SubElement(DireccionReceptor, DTE_NS+"Municipio")
