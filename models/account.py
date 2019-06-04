@@ -103,6 +103,8 @@ class AccountInvoice(models.Model):
                     if linea.product_id.type != 'product':
                         tipo_producto = "S"
                     precio_unitario = linea.price_unit * (100-linea.discount) / 100
+                    precio_sin_descuento = linea.price_unit
+                    descuento = precio_sin_descuento * linea.quantity - precio_unitario * linea.quantity
                     precio_unitario_base = linea.price_subtotal / linea.quantity
                     total_linea = precio_unitario * linea.quantity
                     total_linea_base = precio_unitario_base * linea.quantity
@@ -116,11 +118,11 @@ class AccountInvoice(models.Model):
                     Descripcion = etree.SubElement(Item, DTE_NS+"Descripcion")
                     Descripcion.text = linea.name
                     PrecioUnitario = etree.SubElement(Item, DTE_NS+"PrecioUnitario")
-                    PrecioUnitario.text = str(precio_unitario)
+                    PrecioUnitario.text = str(precio_sin_descuento)
                     Precio = etree.SubElement(Item, DTE_NS+"Precio")
-                    Precio.text = str(total_linea)
+                    Precio.text = str(precio_sin_descuento * linea.quantity)
                     Descuento = etree.SubElement(Item, DTE_NS+"Descuento")
-                    Descuento.text = str(0)
+                    Descuento.text = str(descuento)
                     Impuestos = etree.SubElement(Item, DTE_NS+"Impuestos")
                     Impuesto = etree.SubElement(Impuestos, DTE_NS+"Impuesto")
                     NombreCorto = etree.SubElement(Impuesto, DTE_NS+"NombreCorto")
