@@ -116,9 +116,9 @@ class AccountInvoice(models.Model):
                     Descripcion = etree.SubElement(Item, DTE_NS+"Descripcion")
                     Descripcion.text = linea.name
                     PrecioUnitario = etree.SubElement(Item, DTE_NS+"PrecioUnitario")
-                    PrecioUnitario.text = str(precio_unitario)
+                    PrecioUnitario.text = '{:.2f}'.format(factura.currency_id.round(precio_unitario))
                     Precio = etree.SubElement(Item, DTE_NS+"Precio")
-                    Precio.text = str(total_linea)
+                    Precio.text = '{:.2f}'.format(factura.currency_id.round(total_linea))
                     Descuento = etree.SubElement(Item, DTE_NS+"Descuento")
                     Descuento.text = str(0)
                     Impuestos = etree.SubElement(Item, DTE_NS+"Impuestos")
@@ -128,21 +128,21 @@ class AccountInvoice(models.Model):
                     CodigoUnidadGravable = etree.SubElement(Impuesto, DTE_NS+"CodigoUnidadGravable")
                     CodigoUnidadGravable.text = "1"
                     MontoGravable = etree.SubElement(Impuesto, DTE_NS+"MontoGravable")
-                    MontoGravable.text = str(float_round(total_linea_base, precision_digits=2))
+                    MontoGravable.text = '{:.2f}'.format(factura.currency_id.round(total_linea_base))
                     MontoImpuesto = etree.SubElement(Impuesto, DTE_NS+"MontoImpuesto")
-                    MontoImpuesto.text = str(float_round(total_impuestos, precision_digits=2))
+                    MontoImpuesto.text = '{:.2f}'.format(factura.currency_id.round(total_impuestos))
                     Total = etree.SubElement(Item, DTE_NS+"Total")
-                    Total.text = str(float_round(total_linea, precision_digits=2))
+                    Total.text = '{:.2f}'.format(factura.currency_id.round(total_linea))
 
-                    gran_total += float_round(total_linea, precision_digits=2)
-                    gran_subtotal += float_round(total_linea_base, precision_digits=2)
-                    gran_total_impuestos += float_round(total_impuestos, precision_digits=2)
+                    gran_total += factura.currency_id.round(total_linea)
+                    gran_subtotal += factura.currency_id.round(total_linea_base)
+                    gran_total_impuestos += factura.currency_id.round(total_impuestos)
 
                 Totales = etree.SubElement(DatosEmision, DTE_NS+"Totales")
                 TotalImpuestos = etree.SubElement(Totales, DTE_NS+"TotalImpuestos")
-                TotalImpuesto = etree.SubElement(TotalImpuestos, DTE_NS+"TotalImpuesto", NombreCorto="IVA", TotalMontoImpuesto=str(gran_total_impuestos))
+                TotalImpuesto = etree.SubElement(TotalImpuestos, DTE_NS+"TotalImpuesto", NombreCorto="IVA", TotalMontoImpuesto='{:.2f}'.format(factura.currency_id.round(gran_total_impuestos)))
                 GranTotal = etree.SubElement(Totales, DTE_NS+"GranTotal")
-                GranTotal.text = str(gran_total)
+                GranTotal.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
                 # Adenda = etree.SubElement(DTE, DTE_NS+"Adenda")
 
@@ -161,7 +161,7 @@ class AccountInvoice(models.Model):
                     FechaVencimiento = etree.SubElement(Abono, CFC_NS+"FechaVencimiento")
                     FechaVencimiento.text = str(factura.date_due)
                     MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
-                    MontoAbono.text = str(gran_total)
+                    MontoAbono.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
                 xmls = etree.tostring(GTDocumento)
                 xmls_base64 = base64.b64encode(xmls)
