@@ -53,6 +53,7 @@
                             <group string="Infile">
                                 <group>
                                     <field name="frases_fel"/>
+                                    <field name="adenda_fel"/>
                                 </group>
                             </group>
                         </page>

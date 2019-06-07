@@ -83,7 +83,7 @@ class AccountInvoice(models.Model):
                 Pais.text = factura.partner_id.country_id.code or 'GT'
 
                 # Frases = etree.SubElement(DatosEmision, DTE_NS+"Frases")
-                #Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
+                # Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
 
                 if factura.journal_id.tipo_documento_fel not in ['NDEB', 'NCRE']:
                     ElementoFrases = etree.fromstring(factura.company_id.frases_fel)
@@ -146,9 +146,9 @@ class AccountInvoice(models.Model):
                 GranTotal = etree.SubElement(Totales, DTE_NS+"GranTotal")
                 GranTotal.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
-                if actura.journal_id.adenda_fel:
-                    Adenda = etree.SubElement(DTE, DTE_NS+"Adenda")
-                    exec(actura.journal_id.adenda_fel, {'etree': etree, 'Adenda': Adenda})
+                if factura.company_id.adenda_fel:
+                    Adenda = etree.SubElement(SAT, DTE_NS+"Adenda")
+                    exec(factura.company_id.adenda_fel, {'etree': etree, 'Adenda': Adenda, 'factura': factura})
 
                 if factura.journal_id.tipo_documento_fel in ['NDEB', 'NCRE']:
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
