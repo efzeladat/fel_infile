@@ -146,7 +146,9 @@ class AccountInvoice(models.Model):
                 GranTotal = etree.SubElement(Totales, DTE_NS+"GranTotal")
                 GranTotal.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
-                # Adenda = etree.SubElement(DTE, DTE_NS+"Adenda")
+                if actura.journal_id.adenda_fel:
+                    Adenda = etree.SubElement(DTE, DTE_NS+"Adenda")
+                    exec(actura.journal_id.adenda_fel, {'etree': etree, 'Adenda': Adenda})
 
                 if factura.journal_id.tipo_documento_fel in ['NDEB', 'NCRE']:
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
@@ -235,3 +237,4 @@ class ResCompany(models.Model):
     _inherit = "res.company"
 
     frases_fel = fields.Text('Frases FEL')
+    adenda_fel = fields.Text('Adenda FEL')
