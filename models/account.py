@@ -16,8 +16,8 @@ class AccountInvoice(models.Model):
     _inherit = "account.invoice"
 
     firma_fel = fields.Char('Firma FEL', copy=False)
-    serie_fel = fields.Char('Firma FEL', copy=False)
-    numero_fel = fields.Char('Firma FEL', copy=False)
+    serie_fel = fields.Char('Serie FEL', copy=False)
+    numero_fel = fields.Char('Numero FEL', copy=False)
     pdf_fel = fields.Char('PDF FEL', copy=False)
     factura_original_id = fields.Many2one('account.invoice', string="Factura original FEL")
 
