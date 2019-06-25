@@ -54,9 +54,9 @@ class AccountInvoice(models.Model):
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
 
                 # DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo=factura.journal_id.tipo_documento_fel)
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", Tipo=factura.journal_id.tipo_documento_fel)
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=fields.Datetime.context_timestamp(factura, datetime.datetime.now()).isoformat(), Tipo=factura.journal_id.tipo_documento_fel)
 
-                Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.company_id.name, NombreEmisor=factura.company_id.name)
+                Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.journal_id.direccion.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
                 Direccion = etree.SubElement(DireccionEmisor, DTE_NS+"Direccion")
                 Direccion.text = factura.journal_id.direccion.street or 'Ciudad'
