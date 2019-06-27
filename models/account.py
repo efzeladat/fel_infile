@@ -8,6 +8,8 @@ from datetime import datetime
 import base64
 from lxml import etree
 import requests
+import re
+
 #from import XMLSigner
 
 import logging
@@ -54,9 +56,9 @@ class AccountInvoice(models.Model):
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
 
                 # DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", NumeroAcceso=str(100000000+factura.id), Tipo=factura.journal_id.tipo_documento_fel)
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=factura.date_invoice+"T00:30:00", Tipo=factura.journal_id.tipo_documento_fel)
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda="GTQ", FechaHoraEmision=fields.Datetime.context_timestamp(factura, datetime.now()).strftime('%Y-%m-%dT%H:%M:%S'), Tipo=factura.journal_id.tipo_documento_fel)
 
-                Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.company_id.name, NombreEmisor=factura.company_id.name)
+                Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.journal_id.direccion.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
                 Direccion = etree.SubElement(DireccionEmisor, DTE_NS+"Direccion")
                 Direccion.text = factura.journal_id.direccion.street or 'Ciudad'
@@ -116,7 +118,7 @@ class AccountInvoice(models.Model):
                     UnidadMedida = etree.SubElement(Item, DTE_NS+"UnidadMedida")
                     UnidadMedida.text = "UNI"
                     Descripcion = etree.SubElement(Item, DTE_NS+"Descripcion")
-                    Descripcion.text = linea.name
+                    Descripcion.text = ( linea.product_id.default_code if linea.product_id and linea.product_id.default_code else "-" ) + "|" + re.sub(r'\[.+\] ', '', linea.name)
                     PrecioUnitario = etree.SubElement(Item, DTE_NS+"PrecioUnitario")
                     PrecioUnitario.text = '{:.6f}'.format(precio_sin_descuento)
                     Precio = etree.SubElement(Item, DTE_NS+"Precio")
