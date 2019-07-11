@@ -170,7 +170,8 @@ class AccountInvoice(models.Model):
                     MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
                     MontoAbono.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
-                xmls = etree.tostring(GTDocumento, encoding="UTF-8").replace("&amp;amp;","&amp;")
+                xmls = etree.tostring(GTDocumento, encoding="UTF-8")
+                xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
                 xmls_base64 = base64.b64encode(xmls)
                 logging.warn(xmls)
 
