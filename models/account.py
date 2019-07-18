@@ -121,7 +121,7 @@ class AccountInvoice(models.Model):
                     UnidadMedida = etree.SubElement(Item, DTE_NS+"UnidadMedida")
                     UnidadMedida.text = "UNI"
                     Descripcion = etree.SubElement(Item, DTE_NS+"Descripcion")
-                    Descripcion.text = ( linea.product_id.default_code if linea.product_id and linea.product_id.default_code else "-" ) + "|" + re.sub(r'\[.+\] ', '', linea.name)
+                    Descripcion.text = linea.name
                     PrecioUnitario = etree.SubElement(Item, DTE_NS+"PrecioUnitario")
                     PrecioUnitario.text = '{:.6f}'.format(precio_sin_descuento)
                     Precio = etree.SubElement(Item, DTE_NS+"Precio")
