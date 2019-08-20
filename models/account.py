@@ -195,7 +195,7 @@ class AccountInvoice(models.Model):
                 headers = { "Content-Type": "application/json" }
                 data = {
                     "llave": factura.journal_id.token_firma_fel,
-                    "archivo": xmls_base64,
+                    "archivo": xmls_base64.decode("utf-8"),
                     "codigo": factura.company_id.vat.replace('-',''),
                     "alias": factura.journal_id.usuario_fel,
                     "es_anulacion": "N"
