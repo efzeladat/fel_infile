@@ -60,6 +60,8 @@ class AccountInvoice(models.Model):
                     moneda = "USD"
 
                 DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=fields.Datetime.context_timestamp(factura, datetime.now()).strftime('%Y-%m-%dT%H:%M:%S'), Tipo=factura.journal_id.tipo_documento_fel)
+                if factura.tipo_gasto == 'importacion':
+                    DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, Exp="SI", FechaHoraEmision=fields.Datetime.context_timestamp(factura, datetime.now()).strftime('%Y-%m-%dT%H:%M:%S'), Tipo=factura.journal_id.tipo_documento_fel)
 
                 Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.journal_id.direccion.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
@@ -92,6 +94,8 @@ class AccountInvoice(models.Model):
 
                 if factura.journal_id.tipo_documento_fel not in ['NDEB', 'NCRE']:
                     ElementoFrases = etree.fromstring(factura.company_id.frases_fel)
+                    if factura.tipo_gasto == 'importacion':
+                        Frase = etree.SubElement(ElementoFrases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="4")
                     DatosEmision.append(ElementoFrases)
 
                 Items = etree.SubElement(DatosEmision, DTE_NS+"Items")
