@@ -30,9 +30,7 @@ class AccountInvoice(models.Model):
 
                 NSMAP = {
                     "ds": "http://www.w3.org/2000/09/xmldsig#",
-                    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
                     "dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
-                    "n1": "http://www.altova.com/samplexml/other-namespace",
                 }
 
                 NSMAP_REF = {
@@ -48,7 +46,8 @@ class AccountInvoice(models.Model):
                 CNO_NS = "{http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0}"
                 CFC_NS = "{http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0}"
 
-                GTDocumento = etree.Element(DTE_NS+"GTDocumento", {attr_qname: "http://www.sat.gob.gt/dte/fel/0.1.0"}, Version="0.4", nsmap=NSMAP)
+                # GTDocumento = etree.Element(DTE_NS+"GTDocumento", {attr_qname: "http://www.sat.gob.gt/dte/fel/0.1.0"}, Version="0.4", nsmap=NSMAP)
+                GTDocumento = etree.Element(DTE_NS+"GTDocumento", {}, Version="0.4", nsmap=NSMAP)
                 SAT = etree.SubElement(GTDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
