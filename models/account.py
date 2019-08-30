@@ -54,7 +54,7 @@ class AccountInvoice(models.Model):
                 SAT = etree.SubElement(GTDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
-
+                
                 moneda = "GTQ"
                 if factura.currency_id.id != factura.company_id.currency_id.id:
                     moneda = "USD"
@@ -199,7 +199,7 @@ class AccountInvoice(models.Model):
                 headers = { "Content-Type": "application/json" }
                 data = {
                     "llave": factura.journal_id.token_firma_fel,
-                    "archivo": xmls_base64,
+                    "archivo": xmls_base64.decode("utf-8"),
                     "codigo": factura.company_id.vat.replace('-',''),
                     "alias": factura.journal_id.usuario_fel,
                     "es_anulacion": "N"
