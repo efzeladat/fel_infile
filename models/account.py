@@ -142,6 +142,8 @@ class AccountInvoice(models.Model):
                     NombreCorto.text = "IVA"
                     CodigoUnidadGravable = etree.SubElement(Impuesto, DTE_NS+"CodigoUnidadGravable")
                     CodigoUnidadGravable.text = "1"
+                    if factura.tipo_gasto == 'importacion':
+                        CodigoUnidadGravable.text = "2"
                     MontoGravable = etree.SubElement(Impuesto, DTE_NS+"MontoGravable")
                     MontoGravable.text = '{:.2f}'.format(factura.currency_id.round(total_linea_base))
                     MontoImpuesto = etree.SubElement(Impuesto, DTE_NS+"MontoImpuesto")
