@@ -11,6 +11,9 @@
     'data': [
         'views/account_view.xml',
     ],
+    'external_dependencies': {
+        'python': ['zeep']
+    },
     'demo': [],
     'installable': True
 }
