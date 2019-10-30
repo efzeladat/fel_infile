@@ -66,7 +66,7 @@ class AccountInvoice(models.Model):
                 DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%dT%H:%M:%S'), Tipo=factura.journal_id.tipo_documento_fel)
                 if factura.tipo_gasto == 'importacion':
                     DatosGenerales.attrib['Exp'] = "SI"
-
+                
                 Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.journal_id.direccion.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
                 Direccion = etree.SubElement(DireccionEmisor, DTE_NS+"Direccion")
@@ -80,7 +80,11 @@ class AccountInvoice(models.Model):
                 Pais = etree.SubElement(DireccionEmisor, DTE_NS+"Pais")
                 Pais.text = factura.journal_id.direccion.country_id.code or 'GT'
 
-                Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.name)
+                if factura.partner_id.nombre_facturacion_fel:
+                    Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.nombre_facturacion_fel)
+                else:
+                    Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.name)
+
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
                 Direccion = etree.SubElement(DireccionReceptor, DTE_NS+"Direccion")
                 Direccion.text = factura.partner_id.street or 'Ciudad'
