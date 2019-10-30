@@ -80,10 +80,11 @@ class AccountInvoice(models.Model):
                 Pais = etree.SubElement(DireccionEmisor, DTE_NS+"Pais")
                 Pais.text = factura.journal_id.direccion.country_id.code or 'GT'
 
+                Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.name)
                 if factura.partner_id.nombre_facturacion_fel:
-                    Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.nombre_facturacion_fel)
-                else:
-                    Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.name)
+                    Receptor.attrib['NombreReceptor'] = factura.partner_id.nombre_facturacion_fel
+                if factura.partner_id.email:
+                    Receptor.attrib['CorreoReceptor'] = factura.partner_id.email
 
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
                 Direccion = etree.SubElement(DireccionReceptor, DTE_NS+"Direccion")
