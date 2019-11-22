@@ -264,7 +264,7 @@ class AccountInvoice(models.Model):
                     else:
                         raise UserError(str(certificacion_json["descripcion_errores"]))
                 else:
-                    raise UserError(str(r))
+                    raise UserError(str(r.text))
 
         return super(AccountInvoice,self).invoice_validate()
 
