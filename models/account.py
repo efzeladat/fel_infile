@@ -118,6 +118,9 @@ class AccountInvoice(models.Model):
                 gran_total_impuestos = 0
                 for linea in factura.invoice_line_ids:
 
+                    if linea.quantity * linea.price_unit ==0:
+                        continue
+
                     linea_num += 1
 
                     tipo_producto = "B"
@@ -263,11 +266,11 @@ class AccountInvoice(models.Model):
                         factura.name = str(certificacion_json["serie"])+"-"+str(certificacion_json["numero"])
                         factura.serie_fel = certificacion_json["serie"]
                         factura.numero_fel = certificacion_json["numero"]
-                        factura.pdf_fel =" https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
+                        factura.pdf_fel = "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
                     else:
                         raise UserError(str(certificacion_json["descripcion_errores"]))
                 else:
-                    raise UserError(str(r))
+                    raise UserError(str(r.text))
 
         return super(AccountInvoice,self).invoice_validate()
 
