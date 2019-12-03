@@ -42,7 +42,7 @@ class AccountInvoice(models.Model):
                 NSMAP_ABONO = {
                     "cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
                 }
-                
+
                 NSMAP_EXP = {
                     "cex": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0",
                 }
@@ -58,7 +58,7 @@ class AccountInvoice(models.Model):
                 SAT = etree.SubElement(GTDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
-                
+
                 moneda = "GTQ"
                 if factura.currency_id.id != factura.company_id.currency_id.id:
                     moneda = "USD"
@@ -66,7 +66,7 @@ class AccountInvoice(models.Model):
                 DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%dT%H:%M:%S'), Tipo=factura.journal_id.tipo_documento_fel)
                 if factura.tipo_gasto == 'importacion':
                     DatosGenerales.attrib['Exp'] = "SI"
-                
+
                 Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.journal_id.direccion.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
                 Direccion = etree.SubElement(DireccionEmisor, DTE_NS+"Direccion")
@@ -114,6 +114,9 @@ class AccountInvoice(models.Model):
                 gran_total = 0
                 gran_total_impuestos = 0
                 for linea in factura.invoice_line_ids:
+
+                    if linea.quantity * linea.price_unit ==0:
+                        continue
 
                     linea_num += 1
 
@@ -180,7 +183,7 @@ class AccountInvoice(models.Model):
 
                 if factura.journal_id.tipo_documento_fel in ['FCAM'] or factura.tipo_gasto == 'importacion':
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
-    
+
                     if factura.journal_id.tipo_documento_fel in ['FCAM']:
                         Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="FCAM", NombreComplemento="AbonosFacturaCambiaria", URIComplemento="#AbonosFacturaCambiaria")
                         AbonosFacturaCambiaria = etree.SubElement(Complemento, CFC_NS+"AbonosFacturaCambiaria", Version="1", nsmap=NSMAP_ABONO)
@@ -191,7 +194,7 @@ class AccountInvoice(models.Model):
                         FechaVencimiento.text = str(factura.date_due)
                         MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
                         MontoAbono.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
-                    
+
                     if factura.tipo_gasto == 'importacion':
                         Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
                         Exportacion = etree.SubElement(Complemento, CEX_NS+"Exportacion", Version="1", nsmap=NSMAP_EXP)
@@ -260,7 +263,7 @@ class AccountInvoice(models.Model):
                         factura.name = str(certificacion_json["serie"])+"-"+str(certificacion_json["numero"])
                         factura.serie_fel = certificacion_json["serie"]
                         factura.numero_fel = certificacion_json["numero"]
-                        factura.pdf_fel =" https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
+                        factura.pdf_fel = "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
                     else:
                         raise UserError(str(certificacion_json["descripcion_errores"]))
                 else:
