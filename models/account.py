@@ -184,7 +184,7 @@ class AccountInvoice(models.Model):
                     else:
                         ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", RegimenAntiguo="Antiguo", FechaEmisionDocumentoOrigen=str(factura.factura_original_id.date_invoice), MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.name.split("-")[1], SerieDocumentoOrigen=factura.factura_original_id.name.split("-")[0], Version="0.0", nsmap=NSMAP_REF)
 
-                if factura.journal_id.tipo_documento_fel in ['FCAM'] or factura.tipo_gasto == 'importacion':
+                if factura.journal_id.tipo_documento_fel in ['FCAM'] or ( factura.journal_id.tipo_documento_fel in ['FACT', 'FCAM'] and factura.tipo_gasto == 'importacion' ):
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
 
                     if factura.journal_id.tipo_documento_fel in ['FCAM']:
@@ -198,7 +198,7 @@ class AccountInvoice(models.Model):
                         MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
                         MontoAbono.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
-                    if factura.tipo_gasto == 'importacion' and factura.journal_id.tipo_documento_fel in ['FACT', 'FCAM']:
+                    if factura.tipo_gasto == 'importacion':
                         Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
                         Exportacion = etree.SubElement(Complemento, CEX_NS+"Exportacion", Version="1", nsmap=NSMAP_EXP)
                         NombreConsignatarioODestinatario = etree.SubElement(Exportacion, CEX_NS+"NombreConsignatarioODestinatario")
