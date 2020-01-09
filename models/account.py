@@ -42,7 +42,7 @@ class AccountInvoice(models.Model):
                 NSMAP_ABONO = {
                     "cfc": "http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0",
                 }
-                
+
                 NSMAP_EXP = {
                     "cex": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0",
                 }
@@ -58,7 +58,7 @@ class AccountInvoice(models.Model):
                 SAT = etree.SubElement(GTDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
-                
+
                 moneda = "GTQ"
                 if factura.currency_id.id != factura.company_id.currency_id.id:
                     moneda = "USD"
@@ -175,7 +175,7 @@ class AccountInvoice(models.Model):
 
                 if factura.journal_id.tipo_documento_fel in ['FCAM'] or factura.tipo_gasto == 'importacion':
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
-    
+
                     if factura.journal_id.tipo_documento_fel in ['FCAM']:
                         Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="FCAM", NombreComplemento="AbonosFacturaCambiaria", URIComplemento="#AbonosFacturaCambiaria")
                         AbonosFacturaCambiaria = etree.SubElement(Complemento, CFC_NS+"AbonosFacturaCambiaria", Version="1", nsmap=NSMAP_ABONO)
@@ -186,8 +186,8 @@ class AccountInvoice(models.Model):
                         FechaVencimiento.text = str(factura.date_due)
                         MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
                         MontoAbono.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
-                    
-                    if factura.tipo_gasto == 'importacion':
+
+                    if factura.tipo_gasto == 'importacion' and factura.journal_id.tipo_documento_fel in ['FACT', 'FCAM']:
                         Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
                         Exportacion = etree.SubElement(Complemento, CEX_NS+"Exportacion", Version="1", nsmap=NSMAP_EXP)
                         NombreConsignatarioODestinatario = etree.SubElement(Exportacion, CEX_NS+"NombreConsignatarioODestinatario")
