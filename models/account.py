@@ -80,7 +80,15 @@ class AccountInvoice(models.Model):
                 Pais = etree.SubElement(DireccionEmisor, DTE_NS+"Pais")
                 Pais.text = factura.journal_id.direccion.country_id.code or 'GT'
 
-                Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", CorreoReceptor=factura.partner_id.email, IDReceptor=factura.partner_id.vat.replace('-',''), NombreReceptor=factura.partner_id.name)
+                nit_receptor = 'CF'
+                if factura.partner_id.vat:
+                    nit_receptor = factura.partner_id.vat.replace('-','')
+                Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", IDReceptor=nit_receptor, NombreReceptor=factura.partner_id.name)
+                if factura.partner_id.nombre_facturacion_fel:
+                    Receptor.attrib['NombreReceptor'] = factura.partner_id.nombre_facturacion_fel
+                if factura.partner_id.email:
+                    Receptor.attrib['CorreoReceptor'] = factura.partner_id.email
+
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
                 Direccion = etree.SubElement(DireccionReceptor, DTE_NS+"Direccion")
                 Direccion.text = factura.partner_id.street or 'Ciudad'
@@ -109,6 +117,9 @@ class AccountInvoice(models.Model):
                 gran_total = 0
                 gran_total_impuestos = 0
                 for linea in factura.invoice_line_ids:
+
+                    if linea.quantity * linea.price_unit ==0:
+                        continue
 
                     linea_num += 1
 
@@ -234,7 +245,7 @@ class AccountInvoice(models.Model):
                 logging.warn(r.json())
                 firma_json = r.json()
                 if firma_json["resultado"]:
-                    logging.warn(base64.b64decode(firma_json["archivo"]))
+                    # logging.warn(base64.b64decode(firma_json["archivo"]))
 
                     headers = {
                         "USUARIO": factura.journal_id.usuario_fel,
@@ -255,11 +266,11 @@ class AccountInvoice(models.Model):
                         factura.name = str(certificacion_json["serie"])+"-"+str(certificacion_json["numero"])
                         factura.serie_fel = certificacion_json["serie"]
                         factura.numero_fel = certificacion_json["numero"]
-                        factura.pdf_fel =" https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
+                        factura.pdf_fel = "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
                     else:
                         raise UserError(str(certificacion_json["descripcion_errores"]))
                 else:
-                    raise UserError(str(r))
+                    raise UserError(str(r.text))
 
         return super(AccountInvoice,self).invoice_validate()
 
