@@ -47,11 +47,16 @@ class AccountInvoice(models.Model):
                     "cex": "http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0",
                 }
 
+                NSMAP_FE = {
+                    "cfe": "http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0",
+                }
+
                 DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.1.0}"
                 DS_NS = "{http://www.w3.org/2000/09/xmldsig#}"
                 CNO_NS = "{http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0}"
-                CFC_NS = "{http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0}"
+                CFE_NS = "{http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0}"
                 CEX_NS = "{http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0}"
+                CFC_NS = "{http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0}"
 
                 # GTDocumento = etree.Element(DTE_NS+"GTDocumento", {attr_qname: "http://www.sat.gob.gt/dte/fel/0.1.0"}, Version="0.4", nsmap=NSMAP)
                 GTDocumento = etree.Element(DTE_NS+"GTDocumento", {}, Version="0.4", nsmap=NSMAP)
@@ -83,11 +88,15 @@ class AccountInvoice(models.Model):
                 nit_receptor = 'CF'
                 if factura.partner_id.vat:
                     nit_receptor = factura.partner_id.vat.replace('-','')
+                if factura.journal_id.tipo_documento_fel == "FESP":
+                    nit_receptor = factura.partner_id.cui
                 Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", IDReceptor=nit_receptor, NombreReceptor=factura.partner_id.name)
                 if factura.partner_id.nombre_facturacion_fel:
                     Receptor.attrib['NombreReceptor'] = factura.partner_id.nombre_facturacion_fel
                 if factura.partner_id.email:
                     Receptor.attrib['CorreoReceptor'] = factura.partner_id.email
+                if factura.journal_id.tipo_documento_fel == "FESP":
+                    Receptor.attrib['TipoEspecial'] = "CUI"
 
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
                 Direccion = etree.SubElement(DireccionReceptor, DTE_NS+"Direccion")
@@ -104,7 +113,7 @@ class AccountInvoice(models.Model):
                 # Frases = etree.SubElement(DatosEmision, DTE_NS+"Frases")
                 # Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
 
-                if factura.journal_id.tipo_documento_fel not in ['NDEB', 'NCRE']:
+                if factura.journal_id.tipo_documento_fel not in ['NDEB', 'NCRE', 'RECI', 'NABN', 'FESP']:
                     ElementoFrases = etree.fromstring(factura.company_id.frases_fel)
                     if factura.tipo_gasto == 'importacion':
                         Frase = etree.SubElement(ElementoFrases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="4")
@@ -147,18 +156,19 @@ class AccountInvoice(models.Model):
                     Precio.text = '{:.6f}'.format(precio_sin_descuento * linea.quantity)
                     Descuento = etree.SubElement(Item, DTE_NS+"Descuento")
                     Descuento.text = '{:.6f}'.format(descuento)
-                    Impuestos = etree.SubElement(Item, DTE_NS+"Impuestos")
-                    Impuesto = etree.SubElement(Impuestos, DTE_NS+"Impuesto")
-                    NombreCorto = etree.SubElement(Impuesto, DTE_NS+"NombreCorto")
-                    NombreCorto.text = "IVA"
-                    CodigoUnidadGravable = etree.SubElement(Impuesto, DTE_NS+"CodigoUnidadGravable")
-                    CodigoUnidadGravable.text = "1"
-                    if factura.tipo_gasto == 'importacion':
-                        CodigoUnidadGravable.text = "2"
-                    MontoGravable = etree.SubElement(Impuesto, DTE_NS+"MontoGravable")
-                    MontoGravable.text = '{:.2f}'.format(factura.currency_id.round(total_linea_base))
-                    MontoImpuesto = etree.SubElement(Impuesto, DTE_NS+"MontoImpuesto")
-                    MontoImpuesto.text = '{:.2f}'.format(factura.currency_id.round(total_impuestos))
+                    if total_impuestos != 0:
+                        Impuestos = etree.SubElement(Item, DTE_NS+"Impuestos")
+                        Impuesto = etree.SubElement(Impuestos, DTE_NS+"Impuesto")
+                        NombreCorto = etree.SubElement(Impuesto, DTE_NS+"NombreCorto")
+                        NombreCorto.text = "IVA"
+                        CodigoUnidadGravable = etree.SubElement(Impuesto, DTE_NS+"CodigoUnidadGravable")
+                        CodigoUnidadGravable.text = "1"
+                        if factura.tipo_gasto == 'importacion':
+                            CodigoUnidadGravable.text = "2"
+                        MontoGravable = etree.SubElement(Impuesto, DTE_NS+"MontoGravable")
+                        MontoGravable.text = '{:.2f}'.format(factura.currency_id.round(total_linea_base))
+                        MontoImpuesto = etree.SubElement(Impuesto, DTE_NS+"MontoImpuesto")
+                        MontoImpuesto.text = '{:.2f}'.format(factura.currency_id.round(total_impuestos))
                     Total = etree.SubElement(Item, DTE_NS+"Total")
                     Total.text = '{:.2f}'.format(factura.currency_id.round(total_linea))
 
@@ -167,8 +177,9 @@ class AccountInvoice(models.Model):
                     gran_total_impuestos += factura.currency_id.round(total_impuestos)
 
                 Totales = etree.SubElement(DatosEmision, DTE_NS+"Totales")
-                TotalImpuestos = etree.SubElement(Totales, DTE_NS+"TotalImpuestos")
-                TotalImpuesto = etree.SubElement(TotalImpuestos, DTE_NS+"TotalImpuesto", NombreCorto="IVA", TotalMontoImpuesto='{:.2f}'.format(factura.currency_id.round(gran_total_impuestos)))
+                if gran_total_impuestos != 0:
+                    TotalImpuestos = etree.SubElement(Totales, DTE_NS+"TotalImpuestos")
+                    TotalImpuesto = etree.SubElement(TotalImpuestos, DTE_NS+"TotalImpuesto", NombreCorto="IVA", TotalMontoImpuesto='{:.2f}'.format(factura.currency_id.round(gran_total_impuestos)))
                 GranTotal = etree.SubElement(Totales, DTE_NS+"GranTotal")
                 GranTotal.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
@@ -184,37 +195,57 @@ class AccountInvoice(models.Model):
                     else:
                         ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", RegimenAntiguo="Antiguo", FechaEmisionDocumentoOrigen=str(factura.factura_original_id.date_invoice), MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.name.split("-")[1], SerieDocumentoOrigen=factura.factura_original_id.name.split("-")[0], Version="0.0", nsmap=NSMAP_REF)
 
-                if factura.journal_id.tipo_documento_fel in ['FCAM'] or ( factura.journal_id.tipo_documento_fel in ['FACT', 'FCAM'] and factura.tipo_gasto == 'importacion' ):
+                if factura.journal_id.tipo_documento_fel in ['FCAM']:
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
 
-                    if factura.journal_id.tipo_documento_fel in ['FCAM']:
-                        Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="FCAM", NombreComplemento="AbonosFacturaCambiaria", URIComplemento="#AbonosFacturaCambiaria")
-                        AbonosFacturaCambiaria = etree.SubElement(Complemento, CFC_NS+"AbonosFacturaCambiaria", Version="1", nsmap=NSMAP_ABONO)
-                        Abono = etree.SubElement(AbonosFacturaCambiaria, CFC_NS+"Abono")
-                        NumeroAbono = etree.SubElement(Abono, CFC_NS+"NumeroAbono")
-                        NumeroAbono.text = "1"
-                        FechaVencimiento = etree.SubElement(Abono, CFC_NS+"FechaVencimiento")
-                        FechaVencimiento.text = str(factura.date_due)
-                        MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
-                        MontoAbono.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
+                    Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="FCAM", NombreComplemento="AbonosFacturaCambiaria", URIComplemento="#AbonosFacturaCambiaria")
+                    AbonosFacturaCambiaria = etree.SubElement(Complemento, CFC_NS+"AbonosFacturaCambiaria", Version="1", nsmap=NSMAP_ABONO)
+                    Abono = etree.SubElement(AbonosFacturaCambiaria, CFC_NS+"Abono")
+                    NumeroAbono = etree.SubElement(Abono, CFC_NS+"NumeroAbono")
+                    NumeroAbono.text = "1"
+                    FechaVencimiento = etree.SubElement(Abono, CFC_NS+"FechaVencimiento")
+                    FechaVencimiento.text = str(factura.date_due)
+                    MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
+                    MontoAbono.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
-                    if factura.tipo_gasto == 'importacion':
-                        Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
-                        Exportacion = etree.SubElement(Complemento, CEX_NS+"Exportacion", Version="1", nsmap=NSMAP_EXP)
-                        NombreConsignatarioODestinatario = etree.SubElement(Exportacion, CEX_NS+"NombreConsignatarioODestinatario")
-                        NombreConsignatarioODestinatario.text = "-"
-                        DireccionConsignatarioODestinatario = etree.SubElement(Exportacion, CEX_NS+"DireccionConsignatarioODestinatario")
-                        DireccionConsignatarioODestinatario.text = "-"
-                        NombreComprador = etree.SubElement(Exportacion, CEX_NS+"NombreComprador")
-                        NombreComprador.text = "-"
-                        DireccionComprador = etree.SubElement(Exportacion, CEX_NS+"DireccionComprador")
-                        DireccionComprador.text = "-"
-                        INCOTERM = etree.SubElement(Exportacion, CEX_NS+"INCOTERM")
-                        INCOTERM.text = "FOB"
-                        NombreExportador = etree.SubElement(Exportacion, CEX_NS+"NombreExportador")
-                        NombreExportador.text = factura.company_id.name
-                        CodigoExportador = etree.SubElement(Exportacion, CEX_NS+"CodigoExportador")
-                        CodigoExportador.text = "-"
+                if factura.journal_id.tipo_documento_fel in ['FACT', 'FCAM'] and factura.tipo_gasto == 'importacion':
+                    Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
+
+                    Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
+                    Exportacion = etree.SubElement(Complemento, CEX_NS+"Exportacion", Version="1", nsmap=NSMAP_EXP)
+                    NombreConsignatarioODestinatario = etree.SubElement(Exportacion, CEX_NS+"NombreConsignatarioODestinatario")
+                    NombreConsignatarioODestinatario.text = "-"
+                    DireccionConsignatarioODestinatario = etree.SubElement(Exportacion, CEX_NS+"DireccionConsignatarioODestinatario")
+                    DireccionConsignatarioODestinatario.text = "-"
+                    NombreComprador = etree.SubElement(Exportacion, CEX_NS+"NombreComprador")
+                    NombreComprador.text = "-"
+                    DireccionComprador = etree.SubElement(Exportacion, CEX_NS+"DireccionComprador")
+                    DireccionComprador.text = "-"
+                    INCOTERM = etree.SubElement(Exportacion, CEX_NS+"INCOTERM")
+                    INCOTERM.text = "FOB"
+                    NombreExportador = etree.SubElement(Exportacion, CEX_NS+"NombreExportador")
+                    NombreExportador.text = factura.company_id.name
+                    CodigoExportador = etree.SubElement(Exportacion, CEX_NS+"CodigoExportador")
+                    CodigoExportador.text = "-"
+
+                if factura.journal_id.tipo_documento_fel in ['FESP']:
+                    Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
+
+                    total_isr = abs(factura.amount_tax)
+
+                    total_iva_retencion = 0
+                    for impuesto in factura.tax_line_ids:
+                        if impuesto.amount > 0:
+                            total_iva_retencion += impuesto.amount
+
+                    Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
+                    RetencionesFacturaEspecial = etree.SubElement(Complemento, CFE_NS+"RetencionesFacturaEspecial", Version="1", nsmap=NSMAP_FE)
+                    RetencionISR = etree.SubElement(RetencionesFacturaEspecial, CFE_NS+"RetencionISR")
+                    RetencionISR.text = str(total_isr)
+                    RetencionIVA = etree.SubElement(RetencionesFacturaEspecial, CFE_NS+"RetencionIVA")
+                    RetencionIVA.text = str(total_iva_retencion)
+                    TotalMenosRetenciones = etree.SubElement(RetencionesFacturaEspecial, CFE_NS+"TotalMenosRetenciones")
+                    TotalMenosRetenciones.text = str(factura.amount_total)
 
                 xmls = etree.tostring(GTDocumento, encoding="UTF-8")
                 xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
