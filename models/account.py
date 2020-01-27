@@ -88,14 +88,14 @@ class AccountInvoice(models.Model):
                 nit_receptor = 'CF'
                 if factura.partner_id.vat:
                     nit_receptor = factura.partner_id.vat.replace('-','')
-                if factura.journal_id.tipo_documento_fel == "FESP":
+                if factura.journal_id.tipo_documento_fel == "FESP" and factura.partner_id.cui:
                     nit_receptor = factura.partner_id.cui
                 Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", IDReceptor=nit_receptor, NombreReceptor=factura.partner_id.name)
                 if factura.partner_id.nombre_facturacion_fel:
                     Receptor.attrib['NombreReceptor'] = factura.partner_id.nombre_facturacion_fel
                 if factura.partner_id.email:
                     Receptor.attrib['CorreoReceptor'] = factura.partner_id.email
-                if factura.journal_id.tipo_documento_fel == "FESP":
+                if factura.journal_id.tipo_documento_fel == "FESP" and factura.partner_id.cui:
                     Receptor.attrib['TipoEspecial'] = "CUI"
 
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
