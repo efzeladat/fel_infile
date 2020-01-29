@@ -14,16 +14,16 @@ import re
 
 import logging
 
-class AccountInvoice(models.Model):
-    _inherit = "account.invoice"
+class AccountMove(models.Model):
+    _inherit = "account.move"
 
     firma_fel = fields.Char('Firma FEL', copy=False)
     serie_fel = fields.Char('Serie FEL', copy=False)
     numero_fel = fields.Char('Numero FEL', copy=False)
     pdf_fel = fields.Char('PDF FEL', copy=False)
-    factura_original_id = fields.Many2one('account.invoice', string="Factura original FEL")
+    factura_original_id = fields.Many2one('account.move', string="Factura original FEL", domain="[('type', '=', 'out_invoice')]")
 
-    def invoice_validate(self):
+    def post(self):
         detalles = []
         subtotal = 0
         for factura in self:
@@ -68,11 +68,11 @@ class AccountInvoice(models.Model):
                 if factura.currency_id.id != factura.company_id.currency_id.id:
                     moneda = "USD"
 
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%dT%H:%M:%S'), Tipo=factura.journal_id.tipo_documento_fel)
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=factura.invoice_date.strftime('%Y-%m-%dT%H:%M:%S'), Tipo=factura.journal_id.tipo_documento_fel)
                 if factura.tipo_gasto == 'importacion':
                     DatosGenerales.attrib['Exp'] = "SI"
 
-                Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=factura.journal_id.codigo_establecimiento_fel, CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.journal_id.direccion.name, NombreEmisor=factura.company_id.name)
+                Emisor = etree.SubElement(DatosEmision, DTE_NS+"Emisor", AfiliacionIVA="GEN", CodigoEstablecimiento=str(factura.journal_id.codigo_establecimiento), CorreoEmisor="", NITEmisor=factura.company_id.vat.replace('-',''), NombreComercial=factura.journal_id.direccion.name, NombreEmisor=factura.company_id.name)
                 DireccionEmisor = etree.SubElement(Emisor, DTE_NS+"DireccionEmisor")
                 Direccion = etree.SubElement(DireccionEmisor, DTE_NS+"Direccion")
                 Direccion.text = factura.journal_id.direccion.street or 'Ciudad'
@@ -191,7 +191,7 @@ class AccountInvoice(models.Model):
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
                     Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="ReferenciasNota", NombreComplemento="Nota de Credito" if factura.journal_id.tipo_documento_fel == 'NCRE' else "Nota de Debito", URIComplemento="text")
                     if factura.factura_original_id.numero_fel:
-                        ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", FechaEmisionDocumentoOrigen=str(factura.factura_original_id.date_invoice), MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.numero_fel, SerieDocumentoOrigen=factura.factura_original_id.serie_fel, Version="0.0", nsmap=NSMAP_REF)
+                        ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", FechaEmisionDocumentoOrigen=str(factura.factura_original_id.invoice_date), MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.numero_fel, SerieDocumentoOrigen=factura.factura_original_id.serie_fel, Version="0.0", nsmap=NSMAP_REF)
                     else:
                         ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", RegimenAntiguo="Antiguo", FechaEmisionDocumentoOrigen=str(factura.factura_original_id.date_invoice), MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.name.split("-")[1], SerieDocumentoOrigen=factura.factura_original_id.name.split("-")[0], Version="0.0", nsmap=NSMAP_REF)
 
@@ -234,9 +234,9 @@ class AccountInvoice(models.Model):
                     total_isr = abs(factura.amount_tax)
 
                     total_iva_retencion = 0
-                    for impuesto in factura.tax_line_ids:
-                        if impuesto.amount > 0:
-                            total_iva_retencion += impuesto.amount
+                    for impuesto in factura._compute_invoice_taxes_by_group():
+                        if impuesto['amount'] > 0:
+                            total_iva_retencion += impuesto['amount']
 
                     Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
                     RetencionesFacturaEspecial = etree.SubElement(Complemento, CFE_NS+"RetencionesFacturaEspecial", Version="1", nsmap=NSMAP_FE)
@@ -303,7 +303,7 @@ class AccountInvoice(models.Model):
                 else:
                     raise UserError(str(r.text))
 
-        return super(AccountInvoice,self).invoice_validate()
+        return super(AccountMove,self).post()
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
@@ -311,7 +311,6 @@ class AccountJournal(models.Model):
     usuario_fel = fields.Char('Usuario FEL', copy=False)
     clave_fel = fields.Char('Clave FEL', copy=False)
     token_firma_fel = fields.Char('Token Firma FEL', copy=False)
-    codigo_establecimiento_fel = fields.Char('Codigo Establecimiento FEL', copy=False)
     tipo_documento_fel = fields.Selection([('FACT', 'FACT'), ('FCAM', 'FCAM'), ('FPEQ', 'FPEQ'), ('FCAP', 'FCAP'), ('FESP', 'FESP'), ('NABN', 'NABN'), ('RDON', 'RDON'), ('RECI', 'RECI'), ('NDEB', 'NDEB'), ('NCRE', 'NCRE')], 'Tipo de Documento FEL', copy=False)
 
 class ResCompany(models.Model):
