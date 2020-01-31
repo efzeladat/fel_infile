@@ -27,7 +27,7 @@ class AccountInvoice(models.Model):
         detalles = []
         subtotal = 0
         for factura in self:
-            if factura.journal_id.usuario_fel and not factura.firma_fel:
+            if factura.journal_id.usuario_fel and not factura.firma_fel and factura.amount_total != 0:
                 attr_qname = etree.QName("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation")
 
                 NSMAP = {
