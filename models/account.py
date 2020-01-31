@@ -27,7 +27,7 @@ class AccountMove(models.Model):
         detalles = []
         subtotal = 0
         for factura in self:
-            if factura.journal_id.usuario_fel and not factura.firma_fel:
+            if factura.journal_id.usuario_fel and not factura.firma_fel and factura.amount_total != 0:
                 attr_qname = etree.QName("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation")
 
                 NSMAP = {
@@ -64,11 +64,15 @@ class AccountMove(models.Model):
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
 
+                tipo_documento_fel = factura.journal_id.tipo_documento_fel
+                if tipo_documento_fel in ['FACT', 'FACM'] and factura.type == 'out_refund':
+                    tipo_documento_fel = 'NCRE'
+
                 moneda = "GTQ"
                 if factura.currency_id.id != factura.company_id.currency_id.id:
                     moneda = "USD"
 
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=factura.invoice_date.strftime('%Y-%m-%dT%H:%M:%S'), Tipo=factura.journal_id.tipo_documento_fel)
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=factura.invoice_date.strftime('%Y-%m-%dT%H:%M:%S'), Tipo=tipo_documento_fel)
                 if factura.tipo_gasto == 'importacion':
                     DatosGenerales.attrib['Exp'] = "SI"
 
@@ -88,14 +92,14 @@ class AccountMove(models.Model):
                 nit_receptor = 'CF'
                 if factura.partner_id.vat:
                     nit_receptor = factura.partner_id.vat.replace('-','')
-                if factura.journal_id.tipo_documento_fel == "FESP" and factura.partner_id.cui:
+                if tipo_documento_fel == "FESP" and factura.partner_id.cui:
                     nit_receptor = factura.partner_id.cui
                 Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", IDReceptor=nit_receptor, NombreReceptor=factura.partner_id.name)
                 if factura.partner_id.nombre_facturacion_fel:
                     Receptor.attrib['NombreReceptor'] = factura.partner_id.nombre_facturacion_fel
                 if factura.partner_id.email:
                     Receptor.attrib['CorreoReceptor'] = factura.partner_id.email
-                if factura.journal_id.tipo_documento_fel == "FESP" and factura.partner_id.cui:
+                if tipo_documento_fel == "FESP" and factura.partner_id.cui:
                     Receptor.attrib['TipoEspecial'] = "CUI"
 
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
@@ -113,7 +117,7 @@ class AccountMove(models.Model):
                 # Frases = etree.SubElement(DatosEmision, DTE_NS+"Frases")
                 # Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
 
-                if factura.journal_id.tipo_documento_fel not in ['NDEB', 'NCRE', 'RECI', 'NABN', 'FESP']:
+                if tipo_documento_fel not in ['NDEB', 'NCRE', 'RECI', 'NABN', 'FESP']:
                     ElementoFrases = etree.fromstring(factura.company_id.frases_fel)
                     if factura.tipo_gasto == 'importacion':
                         Frase = etree.SubElement(ElementoFrases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="4")
@@ -187,15 +191,15 @@ class AccountMove(models.Model):
                     Adenda = etree.SubElement(SAT, DTE_NS+"Adenda")
                     exec(factura.company_id.adenda_fel, {'etree': etree, 'Adenda': Adenda, 'factura': factura})
 
-                if factura.journal_id.tipo_documento_fel in ['NDEB', 'NCRE']:
+                if tipo_documento_fel in ['NDEB', 'NCRE']:
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
-                    Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="ReferenciasNota", NombreComplemento="Nota de Credito" if factura.journal_id.tipo_documento_fel == 'NCRE' else "Nota de Debito", URIComplemento="text")
+                    Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="ReferenciasNota", NombreComplemento="Nota de Credito" if tipo_documento_fel == 'NCRE' else "Nota de Debito", URIComplemento="text")
                     if factura.factura_original_id.numero_fel:
                         ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", FechaEmisionDocumentoOrigen=str(factura.factura_original_id.invoice_date), MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.numero_fel, SerieDocumentoOrigen=factura.factura_original_id.serie_fel, Version="0.0", nsmap=NSMAP_REF)
                     else:
                         ReferenciasNota = etree.SubElement(Complemento, CNO_NS+"ReferenciasNota", RegimenAntiguo="Antiguo", FechaEmisionDocumentoOrigen=str(factura.factura_original_id.date_invoice), MotivoAjuste="-", NumeroAutorizacionDocumentoOrigen=factura.factura_original_id.firma_fel, NumeroDocumentoOrigen=factura.factura_original_id.name.split("-")[1], SerieDocumentoOrigen=factura.factura_original_id.name.split("-")[0], Version="0.0", nsmap=NSMAP_REF)
 
-                if factura.journal_id.tipo_documento_fel in ['FCAM']:
+                if tipo_documento_fel in ['FCAM']:
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
 
                     Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="FCAM", NombreComplemento="AbonosFacturaCambiaria", URIComplemento="#AbonosFacturaCambiaria")
@@ -208,7 +212,7 @@ class AccountMove(models.Model):
                     MontoAbono = etree.SubElement(Abono, CFC_NS+"MontoAbono")
                     MontoAbono.text = '{:.2f}'.format(factura.currency_id.round(gran_total))
 
-                if factura.journal_id.tipo_documento_fel in ['FACT', 'FCAM'] and factura.tipo_gasto == 'importacion':
+                if tipo_documento_fel in ['FACT', 'FCAM'] and factura.tipo_gasto == 'importacion':
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
 
                     Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
@@ -228,7 +232,7 @@ class AccountMove(models.Model):
                     CodigoExportador = etree.SubElement(Exportacion, CEX_NS+"CodigoExportador")
                     CodigoExportador.text = "-"
 
-                if factura.journal_id.tipo_documento_fel in ['FESP']:
+                if tipo_documento_fel in ['FESP']:
                     Complementos = etree.SubElement(DatosEmision, DTE_NS+"Complementos")
 
                     total_isr = abs(factura.amount_tax)
