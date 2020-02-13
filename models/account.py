@@ -27,7 +27,7 @@ class AccountMove(models.Model):
         detalles = []
         subtotal = 0
         for factura in self:
-            if factura.journal_id.usuario_fel and not factura.firma_fel and factura.amount_total != 0:
+            if factura.type in ['out_invoice', 'out_refund', 'in_invoice'] and factura.journal_id.usuario_fel and not factura.firma_fel and factura.amount_total != 0:
                 attr_qname = etree.QName("http://www.w3.org/2001/XMLSchema-instance", "schemaLocation")
 
                 NSMAP = {
