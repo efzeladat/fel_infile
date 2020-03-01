@@ -72,7 +72,8 @@ class AccountInvoice(models.Model):
                 if factura.currency_id.id != factura.company_id.currency_id.id:
                     moneda = "USD"
 
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%dT%H:%M:%S'), Tipo=tipo_documento_fel)
+                fecha_hora = fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%d')+'T'+fields.Datetime.context_timestamp(factura, timestamp=fields.Datetime.now()).strftime('%H:%M:%S')
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=fecha_hora, Tipo=tipo_documento_fel)
                 if factura.tipo_gasto == 'importacion':
                     DatosGenerales.attrib['Exp'] = "SI"
 
