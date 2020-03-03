@@ -72,7 +72,9 @@ class AccountInvoice(models.Model):
                 if factura.currency_id.id != factura.company_id.currency_id.id:
                     moneda = "USD"
 
-                fecha_hora = fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%d')+'T'+fields.Datetime.context_timestamp(factura, timestamp=fields.Datetime.now()).strftime('%H:%M:%S')
+                fecha = fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%d')
+                hora = fields.Datetime.context_timestamp(factura, timestamp=datetime.now()).strftime('%H:%M:%S')
+                fecha_hora = fecha+'T'+hora
                 DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=fecha_hora, Tipo=tipo_documento_fel)
                 if factura.tipo_gasto == 'importacion':
                     DatosGenerales.attrib['Exp'] = "SI"
@@ -108,17 +110,13 @@ class AccountInvoice(models.Model):
                 #Direccion.text = factura.partner_id.street or 'Ciudad'
                 Direccion.text = ""
                 CodigoPostal = etree.SubElement(DireccionReceptor, DTE_NS+"CodigoPostal")
-                #CodigoPostal.text = factura.partner_id.zip or '01001'
-                CodigoPostal.text = ""
+                CodigoPostal.text = factura.partner_id.zip or '01001'
                 Municipio = etree.SubElement(DireccionReceptor, DTE_NS+"Municipio")
-                #Municipio.text = factura.partner_id.city or 'Guatemala'
-                Municipio.text = ""
+                Municipio.text = factura.partner_id.city or 'Guatemala'
                 Departamento = etree.SubElement(DireccionReceptor, DTE_NS+"Departamento")
-                #Departamento.text = factura.partner_id.state_id.name if factura.partner_id.state_id else ''
-                Departamento.text = ""
+                Departamento.text = factura.partner_id.state_id.name if factura.partner_id.state_id else ''
                 Pais = etree.SubElement(DireccionReceptor, DTE_NS+"Pais")
-                #Pais.text = factura.partner_id.country_id.code or 'GT'
-                Pais.text = ""
+                Pais.text = factura.partner_id.country_id.code or 'GT'
 
                 if tipo_documento_fel not in ['NDEB', 'NCRE', 'RECI', 'NABN', 'FESP']:
                     ElementoFrases = etree.fromstring(factura.company_id.frases_fel)
@@ -150,7 +148,7 @@ class AccountInvoice(models.Model):
                     total_linea = precio_unitario * linea.quantity
                     total_linea_base = precio_unitario_base * linea.quantity
                     total_impuestos = total_linea - total_linea_base
-                    cantidad_impuestos += len(l.invoice_line_tax_ids)
+                    cantidad_impuestos += len(linea.invoice_line_tax_ids)
 
                     Item = etree.SubElement(Items, DTE_NS+"Item", BienOServicio=tipo_producto, NumeroLinea=str(linea_num))
                     Cantidad = etree.SubElement(Item, DTE_NS+"Cantidad")
@@ -165,7 +163,7 @@ class AccountInvoice(models.Model):
                     Precio.text = '{:.6f}'.format(precio_sin_descuento * linea.quantity)
                     Descuento = etree.SubElement(Item, DTE_NS+"Descuento")
                     Descuento.text = '{:.6f}'.format(descuento)
-                    if len(l.invoice_line_tax_ids) > 0:
+                    if len(linea.invoice_line_tax_ids) > 0:
                         Impuestos = etree.SubElement(Item, DTE_NS+"Impuestos")
                         Impuesto = etree.SubElement(Impuestos, DTE_NS+"Impuesto")
                         NombreCorto = etree.SubElement(Impuesto, DTE_NS+"NombreCorto")
