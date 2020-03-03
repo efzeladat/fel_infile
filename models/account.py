@@ -72,7 +72,8 @@ class AccountMove(models.Model):
                 if factura.currency_id.id != factura.company_id.currency_id.id:
                     moneda = "USD"
 
-                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=factura.invoice_date.strftime('%Y-%m-%dT%H:%M:%S'), Tipo=tipo_documento_fel)
+                fecha_hora = factura.invoice_date.strftime('%Y-%m-%d')+'T'+fields.Datetime.context_timestamp(factura, timestamp=fields.Datetime.now()).strftime('%H:%M:%S')
+                DatosGenerales = etree.SubElement(DatosEmision, DTE_NS+"DatosGenerales", CodigoMoneda=moneda, FechaHoraEmision=fecha_hora, Tipo=tipo_documento_fel)
                 if factura.tipo_gasto == 'importacion':
                     DatosGenerales.attrib['Exp'] = "SI"
 
@@ -96,26 +97,28 @@ class AccountMove(models.Model):
                     nit_receptor = factura.partner_id.cui
                 Receptor = etree.SubElement(DatosEmision, DTE_NS+"Receptor", IDReceptor=nit_receptor, NombreReceptor=factura.partner_id.name)
                 if factura.partner_id.nombre_facturacion_fel:
-                    Receptor.attrib['NombreReceptor'] = factura.partner_id.nombre_facturacion_fel
+                    Receptor.attrib["NombreReceptor"] = factura.partner_id.nombre_facturacion_fel
                 if factura.partner_id.email:
-                    Receptor.attrib['CorreoReceptor'] = factura.partner_id.email
+                    Receptor.attrib["CorreoReceptor"] = factura.partner_id.email
                 if tipo_documento_fel == "FESP" and factura.partner_id.cui:
-                    Receptor.attrib['TipoEspecial'] = "CUI"
+                    Receptor.attrib["TipoEspecial"] = "CUI"
 
                 DireccionReceptor = etree.SubElement(Receptor, DTE_NS+"DireccionReceptor")
                 Direccion = etree.SubElement(DireccionReceptor, DTE_NS+"Direccion")
-                Direccion.text = factura.partner_id.street or 'Ciudad'
+                #Direccion.text = factura.partner_id.street or 'Ciudad'
+                Direccion.text = ""
                 CodigoPostal = etree.SubElement(DireccionReceptor, DTE_NS+"CodigoPostal")
-                CodigoPostal.text = factura.partner_id.zip or '01001'
+                #CodigoPostal.text = factura.partner_id.zip or '01001'
+                CodigoPostal.text = ""
                 Municipio = etree.SubElement(DireccionReceptor, DTE_NS+"Municipio")
-                Municipio.text = factura.partner_id.city or 'Guatemala'
+                #Municipio.text = factura.partner_id.city or 'Guatemala'
+                Municipio.text = ""
                 Departamento = etree.SubElement(DireccionReceptor, DTE_NS+"Departamento")
-                Departamento.text = factura.partner_id.state_id.name if factura.partner_id.state_id else ''
+                #Departamento.text = factura.partner_id.state_id.name if factura.partner_id.state_id else ''
+                Departamento.text = ""
                 Pais = etree.SubElement(DireccionReceptor, DTE_NS+"Pais")
-                Pais.text = factura.partner_id.country_id.code or 'GT'
-
-                # Frases = etree.SubElement(DatosEmision, DTE_NS+"Frases")
-                # Frase = etree.SubElement(Frases, DTE_NS+"Frase", CodigoEscenario="1", TipoFrase="1")
+                #Pais.text = factura.partner_id.country_id.code or 'GT'
+                Pais.text = ""
 
                 if tipo_documento_fel not in ['NDEB', 'NCRE', 'RECI', 'NABN', 'FESP']:
                     ElementoFrases = etree.fromstring(factura.company_id.frases_fel)
@@ -129,6 +132,7 @@ class AccountMove(models.Model):
                 gran_subtotal = 0
                 gran_total = 0
                 gran_total_impuestos = 0
+                cantidad_impuestos = 0
                 for linea in factura.invoice_line_ids:
 
                     if linea.quantity * linea.price_unit ==0:
@@ -146,6 +150,7 @@ class AccountMove(models.Model):
                     total_linea = precio_unitario * linea.quantity
                     total_linea_base = precio_unitario_base * linea.quantity
                     total_impuestos = total_linea - total_linea_base
+                    cantidad_impuestos += len(l.tax_ids)
 
                     Item = etree.SubElement(Items, DTE_NS+"Item", BienOServicio=tipo_producto, NumeroLinea=str(linea_num))
                     Cantidad = etree.SubElement(Item, DTE_NS+"Cantidad")
@@ -160,7 +165,7 @@ class AccountMove(models.Model):
                     Precio.text = '{:.6f}'.format(precio_sin_descuento * linea.quantity)
                     Descuento = etree.SubElement(Item, DTE_NS+"Descuento")
                     Descuento.text = '{:.6f}'.format(descuento)
-                    if total_impuestos != 0:
+                    if len(l.tax_ids) != 0:
                         Impuestos = etree.SubElement(Item, DTE_NS+"Impuestos")
                         Impuesto = etree.SubElement(Impuestos, DTE_NS+"Impuesto")
                         NombreCorto = etree.SubElement(Impuesto, DTE_NS+"NombreCorto")
@@ -181,7 +186,7 @@ class AccountMove(models.Model):
                     gran_total_impuestos += factura.currency_id.round(total_impuestos)
 
                 Totales = etree.SubElement(DatosEmision, DTE_NS+"Totales")
-                if gran_total_impuestos != 0:
+                if cantidad_impuestos > 0:
                     TotalImpuestos = etree.SubElement(Totales, DTE_NS+"TotalImpuestos")
                     TotalImpuesto = etree.SubElement(TotalImpuestos, DTE_NS+"TotalImpuesto", NombreCorto="IVA", TotalMontoImpuesto='{:.2f}'.format(factura.currency_id.round(gran_total_impuestos)))
                 GranTotal = etree.SubElement(Totales, DTE_NS+"GranTotal")
