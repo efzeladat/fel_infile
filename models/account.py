@@ -298,7 +298,7 @@ class AccountMove(models.Model):
                     certificacion_json = r.json()
                     if certificacion_json["resultado"]:
                         factura.firma_fel = certificacion_json["uuid"]
-                        factura.name = str(certificacion_json["serie"])+"-"+str(certificacion_json["numero"])
+                        factura.ref = str(certificacion_json["serie"])+"-"+str(certificacion_json["numero"])
                         factura.serie_fel = certificacion_json["serie"]
                         factura.numero_fel = certificacion_json["numero"]
                         factura.pdf_fel = "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
