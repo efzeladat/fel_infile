@@ -7,7 +7,7 @@
     'description': """ Integración con factura electrónica de Infile """,
     'author': 'Rodrigo Fernandez',
     'website': 'http://aquih.com/',
-    'depends': ['account'],
+    'depends': ['l10n_gt_extra'],
     'data': [
         'views/account_view.xml',
         'views/partner_view.xml',
