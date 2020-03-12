@@ -20,8 +20,12 @@ class AccountInvoice(models.Model):
     firma_fel = fields.Char('Firma FEL', copy=False)
     serie_fel = fields.Char('Serie FEL', copy=False)
     numero_fel = fields.Char('Numero FEL', copy=False)
-    pdf_fel = fields.Char('PDF FEL', copy=False)
     factura_original_id = fields.Many2one('account.invoice', string="Factura original FEL")
+    consignatario_fel = fields.Many2one('res.partner', string="Consignatario o Destinatario FEL")
+    comprador_fel = fields.Many2one('res.partner', string="Comprador FEL")
+    exportador_fel = fields.Many2one('res.partner', string="Exportador FEL")
+    incoterm_fel = fields.Char(string="Incoterm FEL")
+    pdf_fel = fields.Char('PDF FEL', copy=False)
 
     def invoice_validate(self):
         detalles = []
@@ -220,19 +224,19 @@ class AccountInvoice(models.Model):
                         Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
                         Exportacion = etree.SubElement(Complemento, CEX_NS+"Exportacion", Version="1", nsmap=NSMAP_EXP)
                         NombreConsignatarioODestinatario = etree.SubElement(Exportacion, CEX_NS+"NombreConsignatarioODestinatario")
-                        NombreConsignatarioODestinatario.text = "-"
+                        NombreConsignatarioODestinatario.text = factura.consignatario_fel.name if factura.consignatario_fel else "-"
                         DireccionConsignatarioODestinatario = etree.SubElement(Exportacion, CEX_NS+"DireccionConsignatarioODestinatario")
-                        DireccionConsignatarioODestinatario.text = "-"
+                        DireccionConsignatarioODestinatario.text = factura.consignatario_fel.street or "-" if factura.consignatario_fel else "-"
                         NombreComprador = etree.SubElement(Exportacion, CEX_NS+"NombreComprador")
-                        NombreComprador.text = "-"
+                        NombreComprador.text = factura.comprador_fel.name if factura.comprador_fel else "-"
                         DireccionComprador = etree.SubElement(Exportacion, CEX_NS+"DireccionComprador")
-                        DireccionComprador.text = "-"
+                        DireccionComprador.text = factura.comprador_fel.street or "-" if factura.comprador_fel else "-"
                         INCOTERM = etree.SubElement(Exportacion, CEX_NS+"INCOTERM")
-                        INCOTERM.text = "FOB"
+                        INCOTERM.text = factura.incoterm_fel or "-"
                         NombreExportador = etree.SubElement(Exportacion, CEX_NS+"NombreExportador")
-                        NombreExportador.text = factura.company_id.name
+                        NombreExportador.text = factura.exportador_fel.name if factura.exportador_fel else "-"
                         CodigoExportador = etree.SubElement(Exportacion, CEX_NS+"CodigoExportador")
-                        CodigoExportador.text = "-"
+                        CodigoExportador.text = factura.exportador_fel.ref or "-" if factura.exportador_fel else "-"
 
                     if tipo_documento_fel in ['FESP']:
                         total_isr = abs(factura.amount_tax)
