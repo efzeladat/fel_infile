@@ -326,71 +326,72 @@ class AccountInvoice(models.Model):
             DS_NS = "{http://www.w3.org/2000/09/xmldsig#}"
         
             for factura in self:
+                if factura.journal_id.usuario_fel and factura.firma_fel:
 
-                tipo_documento_fel = factura.journal_id.tipo_documento_fel
-                if tipo_documento_fel in ['FACT', 'FACM'] and factura.type == 'out_refund':
-                    tipo_documento_fel = 'NCRE'
+                    tipo_documento_fel = factura.journal_id.tipo_documento_fel
+                    if tipo_documento_fel in ['FACT', 'FACM'] and factura.type == 'out_refund':
+                        tipo_documento_fel = 'NCRE'
 
-                nit_receptor = 'CF'
-                if factura.partner_id.vat:
-                    nit_receptor = factura.partner_id.vat.replace('-','')
-                if tipo_documento_fel == "FESP" and factura.partner_id.cui:
-                    nit_receptor = factura.partner_id.cui
+                    nit_receptor = 'CF'
+                    if factura.partner_id.vat:
+                        nit_receptor = factura.partner_id.vat.replace('-','')
+                    if tipo_documento_fel == "FESP" and factura.partner_id.cui:
+                        nit_receptor = factura.partner_id.cui
 
-                fecha = fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%d')
-                hora = fields.Datetime.context_timestamp(factura, timestamp=datetime.now()).strftime('%H:%M:%S')
-                fecha_hora = fecha+'T'+hora
-                
-                fecha_hoy = fields.Date.context_today(factura, timestamp=datetime.now())
-                fecha_hora_hoy = fecha_hoy+'T'+hora
+                    fecha = fields.Date.from_string(factura.date_invoice).strftime('%Y-%m-%d')
+                    hora = fields.Datetime.context_timestamp(factura, timestamp=datetime.now()).strftime('%H:%M:%S')
+                    fecha_hora = fecha+'T'+hora
 
-                GTAnulacionDocumento = etree.Element(DTE_NS+"GTAnulacionDocumento", {}, Version="0.1", nsmap=NSMAP)
-                SAT = etree.SubElement(GTAnulacionDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
-                AnulacionDTE = etree.SubElement(SAT, DTE_NS+"AnulacionDTE", ID="DatosCertificados")
-                DatosGenerales = etree.SubElement(AnulacionDTE, DTE_NS+"DatosGenerales", ID="DatosAnulacion", NumeroDocumentoAAnular=factura.firma_fel, NITEmisor=factura.company_id.vat.replace("-",""), IDReceptor=nit_receptor, FechaEmisionDocumentoAnular=fecha_hora, FechaHoraAnulacion=fecha_hora_hoy, MotivoAnulacion="Error")
-                # Certificacion = etree.SubElement(AnulacionDTE, DTE_NS+"Certificacion")
-                # NITCertificador = etree.SubElement(Certificacion, DTE_NS+"NITCertificador")
-                # NITCertificador.text = "12521337"
-                # NombreCertificador = etree.SubElement(Certificacion, DTE_NS+"NombreCertificador")
-                # NombreCertificador.text = "INFILE, S.A."NombreCertificador = etree.SubElement(Certificacion, DTE_NS+"NombreCertificador")
-                # NombreCertificador.text = "INFILE, S.A."
+                    fecha_hoy = fields.Date.context_today(factura, timestamp=datetime.now())
+                    fecha_hora_hoy = fecha_hoy+'T'+hora
 
-                xmls = etree.tostring(GTAnulacionDocumento, encoding="UTF-8")
-                xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
-                xmls_base64 = base64.b64encode(xmls)
-                logging.warn(xmls)
+                    GTAnulacionDocumento = etree.Element(DTE_NS+"GTAnulacionDocumento", {}, Version="0.1", nsmap=NSMAP)
+                    SAT = etree.SubElement(GTAnulacionDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
+                    AnulacionDTE = etree.SubElement(SAT, DTE_NS+"AnulacionDTE", ID="DatosCertificados")
+                    DatosGenerales = etree.SubElement(AnulacionDTE, DTE_NS+"DatosGenerales", ID="DatosAnulacion", NumeroDocumentoAAnular=factura.firma_fel, NITEmisor=factura.company_id.vat.replace("-",""), IDReceptor=nit_receptor, FechaEmisionDocumentoAnular=fecha_hora, FechaHoraAnulacion=fecha_hora_hoy, MotivoAnulacion="Error")
+                    # Certificacion = etree.SubElement(AnulacionDTE, DTE_NS+"Certificacion")
+                    # NITCertificador = etree.SubElement(Certificacion, DTE_NS+"NITCertificador")
+                    # NITCertificador.text = "12521337"
+                    # NombreCertificador = etree.SubElement(Certificacion, DTE_NS+"NombreCertificador")
+                    # NombreCertificador.text = "INFILE, S.A."NombreCertificador = etree.SubElement(Certificacion, DTE_NS+"NombreCertificador")
+                    # NombreCertificador.text = "INFILE, S.A."
 
-                headers = { "Content-Type": "application/json" }
-                data = {
-                    "llave": factura.journal_id.token_firma_fel,
-                    "archivo": xmls_base64.decode("utf-8"),
-                    "codigo": factura.company_id.vat.replace('-',''),
-                    "alias": factura.journal_id.usuario_fel,
-                    "es_anulacion": "Y"
-                }
-                r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
-                logging.warn(r.json())
-                firma_json = r.json()
-                if firma_json["resultado"]:
+                    xmls = etree.tostring(GTAnulacionDocumento, encoding="UTF-8")
+                    xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
+                    xmls_base64 = base64.b64encode(xmls)
+                    logging.warn(xmls)
 
-                    headers = {
-                        "USUARIO": factura.journal_id.usuario_fel,
-                        "LLAVE": factura.journal_id.clave_fel,
-                        "IDENTIFICADOR": factura.journal_id.code+str(factura.id),
-                        "Content-Type": "application/json",
-                    }
+                    headers = { "Content-Type": "application/json" }
                     data = {
-                        "nit_emisor": factura.company_id.vat.replace('-',''),
-                        "correo_copia": factura.company_id.email,
-                        "xml_dte": firma_json["archivo"]
+                        "llave": factura.journal_id.token_firma_fel,
+                        "archivo": xmls_base64.decode("utf-8"),
+                        "codigo": factura.company_id.vat.replace('-',''),
+                        "alias": factura.journal_id.usuario_fel,
+                        "es_anulacion": "Y"
                     }
-                    r = requests.post("https://certificador.feel.com.gt/fel/certificacion/dte/", json=data, headers=headers)
+                    r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
                     logging.warn(r.json())
-                    certificacion_json = r.json()
-                    if not certificacion_json["resultado"]:
-                        raise UserError(str(certificacion_json["descripcion_errores"]))
-                else:
-                    raise UserError(str(r.text))
+                    firma_json = r.json()
+                    if firma_json["resultado"]:
+
+                        headers = {
+                            "USUARIO": factura.journal_id.usuario_fel,
+                            "LLAVE": factura.journal_id.clave_fel,
+                            "IDENTIFICADOR": factura.journal_id.code+str(factura.id),
+                            "Content-Type": "application/json",
+                        }
+                        data = {
+                            "nit_emisor": factura.company_id.vat.replace('-',''),
+                            "correo_copia": factura.company_id.email,
+                            "xml_dte": firma_json["archivo"]
+                        }
+                        r = requests.post("https://certificador.feel.com.gt/fel/certificacion/dte/", json=data, headers=headers)
+                        logging.warn(r.json())
+                        certificacion_json = r.json()
+                        if not certificacion_json["resultado"]:
+                            raise UserError(str(certificacion_json["descripcion_errores"]))
+                    else:
+                        raise UserError(str(r.text))
 
     @api.multi
     def action_invoice_draft(self):
