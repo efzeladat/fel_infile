@@ -396,7 +396,7 @@ class AccountInvoice(models.Model):
     @api.multi
     def action_invoice_draft(self):
         for factura in self:
-            if factura.firma_fel:
+            if factura.journal_id.usuario_fel and factura.firma_fel:
                 raise UserError("La factura ya fue enviada, por lo que ya no puede ser modificada")
             else:
                 return super(AccountInvoice, self).action_invoice_draft()
