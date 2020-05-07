@@ -1,4 +1,4 @@
-    # -*- encoding: utf-8 -*-
+# -*- encoding: utf-8 -*-
 
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
@@ -36,7 +36,7 @@ class AccountInvoice(models.Model):
 
                 NSMAP = {
                     "ds": "http://www.w3.org/2000/09/xmldsig#",
-                    "dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                    "dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
                 }
 
                 NSMAP_REF = {
@@ -55,15 +55,15 @@ class AccountInvoice(models.Model):
                     "cfe": "http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0",
                 }
 
-                DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.1.0}"
+                DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.2.0}"
                 DS_NS = "{http://www.w3.org/2000/09/xmldsig#}"
                 CNO_NS = "{http://www.sat.gob.gt/face2/ComplementoReferenciaNota/0.1.0}"
                 CFE_NS = "{http://www.sat.gob.gt/face2/ComplementoFacturaEspecial/0.1.0}"
                 CEX_NS = "{http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0}"
                 CFC_NS = "{http://www.sat.gob.gt/dte/fel/CompCambiaria/0.1.0}"
 
-                # GTDocumento = etree.Element(DTE_NS+"GTDocumento", {attr_qname: "http://www.sat.gob.gt/dte/fel/0.1.0"}, Version="0.4", nsmap=NSMAP)
-                GTDocumento = etree.Element(DTE_NS+"GTDocumento", {}, Version="0.4", nsmap=NSMAP)
+                # GTDocumento = etree.Element(DTE_NS+"GTDocumento", {attr_qname: "http://www.sat.gob.gt/dte/fel/0.2.0"}, Version="0.4", nsmap=NSMAP)
+                GTDocumento = etree.Element(DTE_NS+"GTDocumento", {}, Version="0.1", nsmap=NSMAP)
                 SAT = etree.SubElement(GTDocumento, DTE_NS+"SAT", ClaseDocumento="dte")
                 DTE = etree.SubElement(SAT, DTE_NS+"DTE", ID="DatosCertificados")
                 DatosEmision = etree.SubElement(DTE, DTE_NS+"DatosEmision", ID="DatosEmision")
@@ -296,7 +296,7 @@ class AccountInvoice(models.Model):
                         "correo_copia": factura.company_id.email,
                         "xml_dte": firma_json["archivo"]
                     }
-                    r = requests.post("https://certificador.feel.com.gt/fel/certificacion/dte/", json=data, headers=headers)
+                    r = requests.post("https://certificador.feel.com.gt/fel/certificacion/v2/dte/", json=data, headers=headers)
                     logging.warn(r.json())
                     certificacion_json = r.json()
                     if certificacion_json["resultado"]:
@@ -319,10 +319,10 @@ class AccountInvoice(models.Model):
 
             NSMAP = {
                 "ds": "http://www.w3.org/2000/09/xmldsig#",
-                "dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
+                "dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
             }
 
-            DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.1.0}"
+            DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.2.0}"
             DS_NS = "{http://www.w3.org/2000/09/xmldsig#}"
         
             for factura in self:
@@ -385,7 +385,7 @@ class AccountInvoice(models.Model):
                             "correo_copia": factura.company_id.email,
                             "xml_dte": firma_json["archivo"]
                         }
-                        r = requests.post("https://certificador.feel.com.gt/fel/certificacion/dte/", json=data, headers=headers)
+                        r = requests.post("https://certificador.feel.com.gt/fel/anulacion/v2/dte/", json=data, headers=headers)
                         logging.warn(r.json())
                         certificacion_json = r.json()
                         if not certificacion_json["resultado"]:
