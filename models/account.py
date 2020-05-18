@@ -281,7 +281,7 @@ class AccountInvoice(models.Model):
                     "es_anulacion": "N"
                 }
                 r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
-                logging.warn(r.json())
+                logging.warn(r.text)
                 firma_json = r.json()
                 if firma_json["resultado"]:
 
@@ -308,7 +308,7 @@ class AccountInvoice(models.Model):
                     else:
                         raise UserError(str(certificacion_json["descripcion_errores"]))
                 else:
-                    raise UserError(str(r.text))
+                    raise UserError(r.text)
 
         return super(AccountInvoice, self).invoice_validate()
 
@@ -370,7 +370,7 @@ class AccountInvoice(models.Model):
                         "es_anulacion": "Y"
                     }
                     r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
-                    logging.warn(r.json())
+                    logging.warn(r.text)
                     firma_json = r.json()
                     if firma_json["resultado"]:
 
@@ -391,7 +391,7 @@ class AccountInvoice(models.Model):
                         if not certificacion_json["resultado"]:
                             raise UserError(str(certificacion_json["descripcion_errores"]))
                     else:
-                        raise UserError(str(r.text))
+                        raise UserError(r.text)
 
     @api.multi
     def action_invoice_draft(self):
