@@ -137,7 +137,7 @@ class AccountMove(models.Model):
                 cantidad_impuestos = 0
                 for linea in factura.invoice_line_ids:
 
-                    if linea.quantity * linea.price_unit ==0:
+                    if linea.quantity * linea.price_unit == 0:
                         continue
 
                     linea_num += 1
@@ -283,7 +283,7 @@ class AccountMove(models.Model):
                     "es_anulacion": "N"
                 }
                 r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
-                logging.warn(r.json())
+                logging.warn(r.text)
                 firma_json = r.json()
                 if firma_json["resultado"]:
                     # logging.warn(base64.b64decode(firma_json["archivo"]))
@@ -311,7 +311,7 @@ class AccountMove(models.Model):
                     else:
                         raise UserError(str(certificacion_json["descripcion_errores"]))
                 else:
-                    raise UserError(str(r.text))
+                    raise UserError(r.text)
 
         return super(AccountMove,self).post()
 
