@@ -137,7 +137,7 @@ class AccountInvoice(models.Model):
                 cantidad_impuestos = 0
                 for linea in factura.invoice_line_ids:
 
-                    if linea.quantity * linea.price_unit ==0:
+                    if linea.quantity * linea.price_unit == 0:
                         continue
 
                     linea_num += 1
