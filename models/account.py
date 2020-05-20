@@ -386,7 +386,7 @@ class AccountInvoice(models.Model):
                             "xml_dte": firma_json["archivo"]
                         }
                         r = requests.post("https://certificador.feel.com.gt/fel/anulacion/v2/dte/", json=data, headers=headers)
-                        logging.warn(r.json())
+                        logging.warn(r.text)
                         certificacion_json = r.json()
                         if not certificacion_json["resultado"]:
                             raise UserError(str(certificacion_json["descripcion_errores"]))
