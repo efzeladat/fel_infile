@@ -315,7 +315,6 @@ class AccountMove(models.Model):
 
         return super(AccountMove,self).post()
         
-    @api.multi
     def button_cancel(self):
         result = super(AccountMove, self).button_cancel()
 
@@ -395,7 +394,6 @@ class AccountMove(models.Model):
                 else:
                     raise UserError(r.text)
 
-    @api.multi
     def button_draft(self):
         for factura in self:
             if factura.journal_id.generar_fel and factura.firma_fel:
