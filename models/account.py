@@ -319,10 +319,10 @@ class AccountInvoice(models.Model):
 
             NSMAP = {
                 "ds": "http://www.w3.org/2000/09/xmldsig#",
-                "dte": "http://www.sat.gob.gt/dte/fel/0.2.0",
+                "dte": "http://www.sat.gob.gt/dte/fel/0.1.0",
             }
 
-            DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.2.0}"
+            DTE_NS = "{http://www.sat.gob.gt/dte/fel/0.1.0}"
             DS_NS = "{http://www.w3.org/2000/09/xmldsig#}"
         
             for factura in self:
@@ -342,7 +342,7 @@ class AccountInvoice(models.Model):
                     hora = fields.Datetime.context_timestamp(factura, timestamp=datetime.now()).strftime('%H:%M:%S')
                     fecha_hora = fecha+'T'+hora
 
-                    fecha_hoy = fields.Date.context_today(factura, timestamp=datetime.now())
+                    fecha_hoy = fields.Date.context_today(factura, timestamp=datetime.now()).strftime('%Y-%m-%d')
                     fecha_hora_hoy = fecha_hoy+'T'+hora
 
                     GTAnulacionDocumento = etree.Element(DTE_NS+"GTAnulacionDocumento", {}, Version="0.1", nsmap=NSMAP)
