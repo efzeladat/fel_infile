@@ -242,9 +242,9 @@ class AccountInvoice(models.Model):
                         total_isr = abs(factura.amount_tax)
 
                         total_iva_retencion = 0
-                        for impuesto in factura.tax_line_ids:
-                            if impuesto.amount > 0:
-                                total_iva_retencion += impuesto.amount
+                        for impuesto in factura.amount_by_group:
+                            if impuesto[1] > 0:
+                                total_iva_retencion += impuesto[1]
 
                         Complemento = etree.SubElement(Complementos, DTE_NS+"Complemento", IDComplemento="text", NombreComplemento="text", URIComplemento="text")
                         RetencionesFacturaEspecial = etree.SubElement(Complemento, CFE_NS+"RetencionesFacturaEspecial", Version="1", nsmap=NSMAP_FE)
