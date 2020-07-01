@@ -5,7 +5,7 @@
         <record model="ir.ui.view" id="invoice_form_fel_infile">
             <field name="name">account.invoice.form.fel_infile</field>
             <field name="model">account.invoice</field>
-            <field name="inherit_id" ref="l10n_gt_extra.l10n_gt_view_invoice_form"/>
+            <field name="inherit_id" ref="fel_gt.invoice_form_fel_gt"/>
             <field name="arch" type="xml">
                 <data>
                     <field name="resultado_xml_fel" position="after">
@@ -18,7 +18,7 @@
         <record model="ir.ui.view" id="journal_form_fel_infile">
             <field name="name">account.journal.form.fel_infile</field>
             <field name="model">account.journal</field>
-            <field name="inherit_id" ref="account.view_account_journal_form"/>
+            <field name="inherit_id" ref="fel_gt.journal_form_fel_gt"/>
             <field name="arch" type="xml">
                 <data>
                     <field name="tipo_documento_fel" position="after">
