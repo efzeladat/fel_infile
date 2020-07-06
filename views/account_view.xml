@@ -9,7 +9,7 @@
             <field name="arch" type="xml">
                 <data>
                     <field name="resultado_xml_fel" position="after">
-                            <field name="pdf_fel"/>
+                            <field name="pdf_fel" widget="url"/>
                     </field>
                 </data>
             </field>
