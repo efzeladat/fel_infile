@@ -72,13 +72,12 @@ class AccountInvoice(models.Model):
 
         return super(AccountInvoice, self).invoice_validate()
 
-    @api.multi
     def action_cancel(self):
         result = super(AccountInvoice, self).action_cancel()
         if result:
             for factura in self:
                 if factura.journal_id.usuario_fel:
-                    dte = factura.dte_documento()
+                    dte = factura.dte_anulacion()
                     if dte:
                         xmls = etree.tostring(dte, encoding="UTF-8")
                         xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
