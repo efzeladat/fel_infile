@@ -20,8 +20,6 @@ class AccountInvoice(models.Model):
     pdf_fel = fields.Char('PDF FEL', copy=False)
 
     def invoice_validate(self):
-        detalles = []
-        subtotal = 0
         for factura in self:
             dte = factura.dte_documento()
             logging.warn(dte)
