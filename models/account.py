@@ -21,10 +21,10 @@ class AccountInvoice(models.Model):
 
     def invoice_validate(self):
         for factura in self:
-            if factura.firma_fel:
-                raise UserError("La factura ya fue validada, por lo que no puede ser validada nuevamnte")
-                
             if factura.journal_id.usuario_fel:
+                if factura.firma_fel:
+                    raise UserError("La factura ya fue validada, por lo que no puede ser validada nuevamnte")
+                
                 dte = factura.dte_documento()
                 logging.warn(dte)
                 if dte:
