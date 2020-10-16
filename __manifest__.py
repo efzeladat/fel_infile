@@ -5,8 +5,8 @@
     'version': '1.0',
     'category': 'Custom',
     'description': """ Integración con factura electrónica de Infile """,
-    'author': 'Rodrigo Fernandez',
-    'website': 'http://solucionesprisma.com/',
+    'author': 'aquíH',
+    'website': 'http://aquih.com/',
     'depends': ['fel_gt'],
     'data': [
         'views/account_view.xml',
