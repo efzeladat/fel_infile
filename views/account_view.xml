@@ -14,6 +14,19 @@
                 </data>
             </field>
         </record>
+        
+        <record model="ir.ui.view" id="invoice_supplier_form_fel_infile">
+            <field name="name">account.invoice.supplier.form.fel_infile</field>
+            <field name="model">account.invoice</field>
+            <field name="inherit_id" ref="fel_gt.invoice_supplier_form_fel_gt"/>
+            <field name="arch" type="xml">
+                <data>
+                    <field name="resultado_xml_fel" position="after">
+                        <field name="pdf_fel" widget="url"/>
+                    </field>
+                </data>
+            </field>
+        </record>
 
         <record model="ir.ui.view" id="journal_form_fel_infile">
             <field name="name">account.journal.form.fel_infile</field>
