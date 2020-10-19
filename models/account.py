@@ -64,6 +64,8 @@ class AccountMove(models.Model):
                             factura.ref = str(certificacion_json["serie"])+"-"+str(certificacion_json["numero"])
                             factura.serie_fel = certificacion_json["serie"]
                             factura.numero_fel = certificacion_json["numero"]
+                            factura.documento_xml_fel = xmls_base64
+                            factura.resultado_xml_fel = certificacion_json["xml_certificado"]
                             factura.pdf_fel = "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
                         else:
                             raise UserError(str(certificacion_json["descripcion_errores"]))
