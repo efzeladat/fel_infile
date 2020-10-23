@@ -23,10 +23,8 @@ class AccountInvoice(models.Model):
         for factura in self:
             if factura.journal_id.usuario_fel and factura.requiere_certificacion():
 
-                documento_valido = True
-
                 if factura.error_pre_validacion():
-                    documento_valido = False
+                    return
                 
                 dte = factura.dte_documento()
                 logging.warn(dte)
@@ -71,14 +69,13 @@ class AccountInvoice(models.Model):
                         factura.pdf_fel = "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
                     else:
                         factura.error_certificador(str(certificacion_json["descripcion_errores"]))
-                        documento_valido = False
+                        return
 
                 else:
                     factura.error_certificador(r.text)
-                    documento_valido = False
+                    return
                         
-                if documento_valido:
-                    return super(AccountInvoice, self).invoice_validate()
+                return super(AccountInvoice, self).invoice_validate()
 
             else:
                 return super(AccountInvoice, self).invoice_validate()
