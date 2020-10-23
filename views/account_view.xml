@@ -22,7 +22,6 @@
             <field name="arch" type="xml">
                 <data>
                     <field name="tipo_documento_fel" position="after">
-                        <field name="generar_fel"/>
                     </field>
                 </data>
             </field>
