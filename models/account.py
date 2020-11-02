@@ -95,10 +95,10 @@ class AccountMove(models.Model):
 
                 headers = { "Content-Type": "application/json" }
                 data = {
-                    "llave": factura.journal_id.token_firma_fel,
+                    "llave": factura.company_id.token_firma_fel,
                     "archivo": xmls_base64.decode("utf-8"),
                     "codigo": factura.company_id.vat.replace('-',''),
-                    "alias": factura.journal_id.usuario_fel,
+                    "alias": factura.company_id.usuario_fel,
                 }
                 r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
                 logging.warn(r.text)
@@ -106,8 +106,8 @@ class AccountMove(models.Model):
                 if firma_json["resultado"]:
 
                     headers = {
-                        "USUARIO": factura.journal_id.usuario_fel,
-                        "LLAVE": factura.journal_id.clave_fel,
+                        "USUARIO": factura.company_id.usuario_fel,
+                        "LLAVE": factura.company_id.clave_fel,
                         "IDENTIFICADOR": factura.journal_id.code+str(factura.id),
                         "Content-Type": "application/json",
                     }
