@@ -84,46 +84,45 @@ class AccountMove(models.Model):
         
     def button_cancel(self):
         result = super(AccountMove, self).button_cancel()
-        if result:
-            for factura in self:
-                if factura.journal_id.generar_fel:
-                    dte = factura.dte_anulacion()
-                    if dte:
-                        xmls = etree.tostring(dte, encoding="UTF-8")
-                        xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
-                        xmls_base64 = base64.b64encode(xmls)
-                        logging.warn(xmls)
+        for factura in self:
+            if factura.requiere_certificacion() and factura.firma_fel:
+                dte = factura.dte_anulacion()
+                
+                xmls = etree.tostring(dte, encoding="UTF-8")
+                xmls = xmls.decode("utf-8").replace("&amp;", "&").encode("utf-8")
+                xmls_base64 = base64.b64encode(xmls)
+                logging.warn(xmls)
 
-                        headers = { "Content-Type": "application/json" }
-                        data = {
-                            "llave": factura.journal_id.token_firma_fel,
-                            "archivo": xmls_base64.decode("utf-8"),
-                            "codigo": factura.company_id.vat.replace('-',''),
-                            "alias": factura.journal_id.usuario_fel,
-                        }
-                        r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
-                        logging.warn(r.text)
-                        firma_json = r.json()
-                        if firma_json["resultado"]:
+                headers = { "Content-Type": "application/json" }
+                data = {
+                    "llave": factura.journal_id.token_firma_fel,
+                    "archivo": xmls_base64.decode("utf-8"),
+                    "codigo": factura.company_id.vat.replace('-',''),
+                    "alias": factura.journal_id.usuario_fel,
+                }
+                r = requests.post('https://signer-emisores.feel.com.gt/sign_solicitud_firmas/firma_xml', json=data, headers=headers)
+                logging.warn(r.text)
+                firma_json = r.json()
+                if firma_json["resultado"]:
 
-                            headers = {
-                                "USUARIO": factura.journal_id.usuario_fel,
-                                "LLAVE": factura.journal_id.clave_fel,
-                                "IDENTIFICADOR": factura.journal_id.code+str(factura.id),
-                                "Content-Type": "application/json",
-                            }
-                            data = {
-                                "nit_emisor": factura.company_id.vat.replace('-',''),
-                                "correo_copia": factura.company_id.email,
-                                "xml_dte": firma_json["archivo"]
-                            }
-                            r = requests.post("https://certificador.feel.com.gt/fel/anulacion/v2/dte/", json=data, headers=headers)
-                            logging.warn(r.text)
-                            certificacion_json = r.json()
-                            if not certificacion_json["resultado"]:
-                                raise UserError(str(certificacion_json["descripcion_errores"]))
-                        else:
-                            raise UserError(r.text)
+                    headers = {
+                        "USUARIO": factura.journal_id.usuario_fel,
+                        "LLAVE": factura.journal_id.clave_fel,
+                        "IDENTIFICADOR": factura.journal_id.code+str(factura.id),
+                        "Content-Type": "application/json",
+                    }
+                    data = {
+                        "nit_emisor": factura.company_id.vat.replace('-',''),
+                        "correo_copia": factura.company_id.email,
+                        "xml_dte": firma_json["archivo"]
+                    }
+                    r = requests.post("https://certificador.feel.com.gt/fel/anulacion/v2/dte/", json=data, headers=headers)
+                    logging.warn(r.text)
+                    certificacion_json = r.json()
+                    if not certificacion_json["resultado"]:
+                        raise UserError(str(certificacion_json["descripcion_errores"]))
+                else:
+                    raise UserError(r.text)
 
 class AccountJournal(models.Model):
     _inherit = "account.journal"
