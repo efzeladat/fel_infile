@@ -127,8 +127,6 @@ class AccountMove(models.Model):
 class AccountJournal(models.Model):
     _inherit = "account.journal"
 
-    generar_fel = fields.Boolean('Generar FEL',)
-
 class ResCompany(models.Model):
     _inherit = "res.company"
 
