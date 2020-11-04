@@ -21,8 +21,6 @@
             <field name="inherit_id" ref="fel_gt.journal_form_fel_gt"/>
             <field name="arch" type="xml">
                 <data>
-                    <field name="tipo_documento_fel" position="after">
-                    </field>
                 </data>
             </field>
         </record>
