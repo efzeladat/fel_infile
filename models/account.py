@@ -56,7 +56,7 @@ class AccountMove(models.Model):
                         "correo_copia": factura.company_id.email,
                         "xml_dte": firma_json["archivo"]
                     }
-                    r = requests.post("https://certificador.feel.com.gt/fel/certificacion/v2/dte/", json=data, headers=headers)
+                    r = requests.post("https://certificadorcloud.feel.com.gt/fel/certificacion/v2/dte/", json=data, headers=headers)
                     logging.warn(r.json())
                     certificacion_json = r.json()
                     if certificacion_json["resultado"]:
