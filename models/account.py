@@ -18,13 +18,21 @@ class AccountMove(models.Model):
     _inherit = "account.move"
 
     pdf_fel = fields.Char('PDF FEL', copy=False)
+    
+    def _post(self):
+        if self.certificar():
+            return super(AccountMove, self)._post()
 
     def post(self):
+        if self.certificar():
+            return super(AccountMove, self).post()
+    
+    def certificar(self):
         for factura in self:
             if factura.requiere_certificacion():
 
                 if factura.error_pre_validacion():
-                    return
+                    return False
                 
                 dte = factura.dte_documento()
                 logging.warn(dte)
@@ -69,18 +77,18 @@ class AccountMove(models.Model):
                         factura.pdf_fel = "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
                     else:
                         factura.error_certificador(str(certificacion_json["descripcion_errores"]))
-                        return
+                        return False
                         
                 else:
                     factura.error_certificador(r.text)
-                    return
+                    return False
 
-                return super(AccountMove,self).post()
+                return True
 
             else:
-                return super(AccountMove,self).post()
+                return True
 
-        return super(AccountMove,self).post()
+        return true
         
     def button_cancel(self):
         result = super(AccountMove, self).button_cancel()
