@@ -19,9 +19,9 @@ class AccountMove(models.Model):
 
     pdf_fel = fields.Char('PDF FEL', copy=False)
     
-    def _post(self):
+    def _post(self, soft=True):
         if self.certificar():
-            return super(AccountMove, self)._post()
+            return super(AccountMove, self)._post(soft)
 
     def post(self):
         if self.certificar():
