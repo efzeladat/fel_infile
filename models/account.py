@@ -88,7 +88,7 @@ class AccountMove(models.Model):
             else:
                 return True
 
-        return true
+        return True
         
     def button_cancel(self):
         result = super(AccountMove, self).button_cancel()
