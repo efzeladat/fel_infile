@@ -30,6 +30,7 @@ class AccountMove(models.Model):
     def certificar(self):
         for factura in self:
             if factura.requiere_certificacion():
+                self.ensure_one()
 
                 if factura.error_pre_validacion():
                     return False
@@ -82,11 +83,6 @@ class AccountMove(models.Model):
                 else:
                     factura.error_certificador(r.text)
                     return False
-
-                return True
-
-            else:
-                return True
 
         return True
         
