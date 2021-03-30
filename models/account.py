@@ -76,6 +76,7 @@ class AccountMove(models.Model):
                         factura.documento_xml_fel = xmls_base64
                         factura.resultado_xml_fel = certificacion_json["xml_certificado"]
                         factura.pdf_fel = "https://report.feel.com.gt/ingfacereport/ingfacereport_documento?uuid="+certificacion_json["uuid"]
+                        factura.certificador_fel = "infile"
                     else:
                         factura.error_certificador(str(certificacion_json["descripcion_errores"]))
                         return False
