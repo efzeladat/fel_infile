@@ -3,6 +3,7 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.float_utils import float_round
+from html import unescape
 
 from datetime import datetime
 import base64
@@ -20,13 +21,41 @@ class AccountMove(models.Model):
     pdf_fel = fields.Char('PDF FEL', copy=False)
     
     def _post(self, soft=True):
-        if self.certificar():
+        if self.certificar2():
             return super(AccountMove, self)._post(soft)
 
     def post(self):
-        if self.certificar():
+        if self.certificar2():
             return super(AccountMove, self).post()
-    
+
+    def certificar2(self):
+        # for factura in self:
+            # if factura.requiere_certificacion():
+        self.ensure_one()
+
+        dte = self.env.ref('fel_infile.ejemplo')._render()
+
+        # dte = self.env.ref('fel_infile.invoice_template')._render()
+
+        # dte = factura.dte_documento()
+        # logging.warn(dte)
+        dte = unescape(dte.decode('utf-8')).replace(r'&', '&amp;')
+
+        data = dte;
+        headers = {
+            "UsuarioApi": "GBILSTE",
+            "LlaveApi": "3F4664818CB5EE4C250E78443C6616B6",
+            "UsuarioFirma": "GBILSTE",
+            "LlaveFirma": "656fb5fafafd6987e4f87e9577b811f7",
+            "identificador": "prueba-1"
+        }
+        r = requests.post("https://certificadorcloud.feel.com.gt/fel/procesounificado/transaccion/v2/xml", data=data,
+                          headers=headers)
+        invoice = r.json()
+        logging.info(invoice)
+
+        return False
+
     def certificar(self):
         for factura in self:
             if factura.requiere_certificacion():

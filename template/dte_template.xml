@@ -1,0 +1,58 @@
+<dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.1.0">
+  <dte:SAT ClaseDocumento="dte">
+    <dte:DTE ID="DatosCertificados">
+      <dte:DatosEmision ID="DatosEmision">
+        <dte:DatosGenerales t-att-CodigoMoneda="move.currency_id.name" t-att-FechaHoraEmision="move.create_date" t-att-Tipo="move.doctype"/>
+        <dte:Emisor t-att-AfiliacionIVA="move.company_id.afiliacion_iva_fel" t-att-CodigoEstablecimiento="move.sucursal" t-att-CorreoEmisor="move.company_id.email" t-att-NITEmisor="move.company_id.vat" t-att-NombreComercial="move.company_id.name" t-att-NombreEmisor="move.company_id.name">
+          <dte:DireccionEmisor>
+            <dte:Direccion t-esc="move.company_id.street"/>
+            <dte:CodigoPostal t-esc="move.postalcode"/>
+            <dte:Municipio t-esc=""/>
+            <dte:Departamento t-esc=""/>
+            <dte:Pais t-esc="move.company_id.country_id.name"/>
+          </dte:DireccionEmisor>
+        </dte:Emisor>
+        <dte:Receptor t-att-CorreoReceptor="move.partner_id.email" t-att-IDReceptor="move.partner_id.vat" t-att-NombreReceptor="move.partner_id.name">
+          <dte:DireccionReceptor>
+            <dte:Direccion t-esc="move.partner_id.street"/>
+            <dte:CodigoPostal t-esc=""/>
+            <dte:Municipio t-esc=""/>
+            <dte:Departamento t-esc=""/>
+            <dte:Pais t-esc="move.partner_id.country_id.name"/>
+          </dte:DireccionReceptor>
+        </dte:Receptor>
+        <dte:Frases t-foreach="move.frase-lines" t-as="frase">
+          <dte:Frase t-att-CodigoEscenario="frase.cod" t-att-TipoFrase="frase.tipo"/>
+        </dte:Frases>
+        <dte:Items t-foreach="move.line_ids" t-as="item">
+          <dte:Item t-att-BienOServicio="B" t-att-NumeroLinea="1">
+            <dte:Cantidad t-esc="item.quantity"/>
+            <dte:UnidadMedida t-esc="item.product_uom_id.name"/>
+            <dte:Descripcion t-esc="item.product_id.name"/>
+            <dte:PrecioUnitario t-esc="item.price_unit"/>
+            <dte:Precio t-esc="item.price_subtotal"/>
+            <dte:Descuento t-esc="item.discount"/>
+            <dte:Impuestos t-foreach="move.tax_line_id" t-as="tax">
+              <dte:Impuesto>
+                <dte:NombreCorto t-esc="tax.name"/>
+                <dte:CodigoUnidadGravable t-esc=""/>
+                <dte:MontoGravable t-esc=""/>
+                <dte:MontoImpuesto t-esc="tax.amount"/>
+              </dte:Impuesto>
+            </dte:Impuestos>
+            <dte:Total t-esc="item.price_total"/>
+          </dte:Item>
+        </dte:Items>
+        <dte:Totales>
+          <dte:TotalImpuestos>
+            <dte:TotalImpuesto t-att-NombreCorto="IVA" t-att-TotalMontoImpuesto="12.00"/>
+          </dte:TotalImpuestos>
+          <dte:GranTotal t-esc="item.tax_base_amount"/>
+        </dte:Totales>
+      </dte:DatosEmision>
+    </dte:DTE>
+    <dte:Adenda>
+      <Documento t-esc="factura-20"/>
+    </dte:Adenda>
+  </dte:SAT>
+

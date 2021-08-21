@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<odoo>
+    <data>
+        <template id="ejemplo">
+<dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.1.0">
+  <dte:SAT ClaseDocumento="dte">
+    <dte:DTE ID="DatosCertificados">
+      <dte:DatosEmision ID="DatosEmision">
+        <dte:DatosGenerales CodigoMoneda="GTQ" FechaHoraEmision="2021-08-19T11:02:47-06:00" Tipo="FACT"></dte:DatosGenerales>
+        <dte:Emisor AfiliacionIVA="GEN" CodigoEstablecimiento="1" CorreoEmisor="pruebas@hotmail.com" NITEmisor="76215865" NombreComercial="TESTING" NombreEmisor="TESTING">
+          <dte:DireccionEmisor>
+            <dte:Direccion> Roosevelt,zona 11 Guatemala </dte:Direccion>
+            <dte:CodigoPostal>01011</dte:CodigoPostal>
+            <dte:Municipio>Guatemala</dte:Municipio>
+            <dte:Departamento>Guatemala</dte:Departamento>
+            <dte:Pais>GT</dte:Pais>
+          </dte:DireccionEmisor>
+        </dte:Emisor>
+        <dte:Receptor CorreoReceptor="" IDReceptor="CF" NombreReceptor="Consumidor Final">
+          <dte:DireccionReceptor>
+            <dte:Direccion>CALLE,CALLE2</dte:Direccion>
+            <dte:CodigoPostal>01001</dte:CodigoPostal>
+            <dte:Municipio>Guatemala</dte:Municipio>
+            <dte:Departamento>Guatemala</dte:Departamento>
+            <dte:Pais>GT</dte:Pais>
+          </dte:DireccionReceptor>
+        </dte:Receptor>
+        <dte:Frases>
+          <dte:Frase CodigoEscenario="1" TipoFrase="1"></dte:Frase>
+        </dte:Frases>
+        <dte:Items>
+          <dte:Item BienOServicio="B" NumeroLinea="1">
+            <dte:Cantidad>1.0</dte:Cantidad>
+            <dte:UnidadMedida>UND</dte:UnidadMedida>
+            <dte:Descripcion>PRODUCTO DE PRUEBAS</dte:Descripcion>
+            <dte:PrecioUnitario>112.0</dte:PrecioUnitario>
+            <dte:Precio>112.0</dte:Precio>
+            <dte:Descuento>0.0</dte:Descuento>
+            <dte:Impuestos>
+              <dte:Impuesto>
+                <dte:NombreCorto>IVA</dte:NombreCorto>
+                <dte:CodigoUnidadGravable>1</dte:CodigoUnidadGravable>
+                <dte:MontoGravable>100.0</dte:MontoGravable>
+                <dte:MontoImpuesto>12.00</dte:MontoImpuesto>
+              </dte:Impuesto>
+            </dte:Impuestos>
+            <dte:Total>112.0</dte:Total>
+          </dte:Item>
+        </dte:Items>
+        <dte:Totales>
+          <dte:TotalImpuestos>
+            <dte:TotalImpuesto NombreCorto="IVA" TotalMontoImpuesto="12.00"></dte:TotalImpuesto>
+          </dte:TotalImpuestos>
+          <dte:GranTotal>112.0</dte:GranTotal>
+        </dte:Totales>
+      </dte:DatosEmision>
+    </dte:DTE>
+    <dte:Adenda>
+      <Documento>FACTURA-19</Documento>
+    </dte:Adenda>
+  </dte:SAT>
+</dte:GTDocumento>
+        </template>
+    </data>
+</odoo>

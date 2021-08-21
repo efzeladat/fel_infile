@@ -10,6 +10,8 @@
     'depends': ['fel_gt'],
     'data': [
         'views/account_view.xml',
+        'template/invoice_template.xml',
+        'template/ejemplo.xml',
     ],
     'demo': [],
     'installable': True
