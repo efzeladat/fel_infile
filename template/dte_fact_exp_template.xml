@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<odoo>
+    <data>
+        <template id="dte_template">
+          <dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.1.0">
+            <dte:SAT ClaseDocumento="dte">
+              <dte:DTE ID="DatosCertificados">
+                <dte:DatosEmision ID="DatosEmision">
+                  <dte:DatosGenerales t-att-CodigoMoneda="move.currency_id.name" t-att-FechaHoraEmision="fecha_hora_emision" t-att-Tipo="FACT"/>
+                  <dte:Emisor t-att-AfiliacionIVA="move.company_id.afiliacion_iva_fel" t-att-CodigoEstablecimiento="1" t-att-CorreoEmisor="move.company_id.email" t-att-NITEmisor="move.company_id.vat" t-att-NombreComercial="move.company_id.name" t-att-NombreEmisor="move.company_id.name">
+                    <dte:DireccionEmisor>
+                      <dte:Direccion t-esc="move.company_id.street"/>
+                      <dte:CodigoPostal t-esc="move.company_id.zip"/>
+                      <dte:Municipio t-esc="move.company_id.city"/>
+                      <dte:Departamento t-esc="move.company_id.state_id.name"/>
+                      <dte:Pais t-esc="move.company_id.country_id.name"/>
+                    </dte:DireccionEmisor>
+                  </dte:Emisor>
+                  <dte:Receptor t-att-CorreoReceptor="move.partner_id.email" t-att-IDReceptor="move.partner_id.vat" t-att-NombreReceptor="move.partner_id.name">
+                    <dte:DireccionReceptor>
+                      <dte:Direccion t-esc="move.partner_id.street"/>
+                      <dte:CodigoPostal t-esc="move.partner_id.zip"/>
+                      <dte:Municipio t-esc="move.partner_id.city"/>
+                      <dte:Departamento t-esc="move.partner_id.state_id.name"/>
+                      <dte:Pais t-esc="move.partner_id.country_id.name"/>
+                    </dte:DireccionReceptor>
+                  </dte:Receptor>
+                  <dte:Frases>
+                    <dte:Frase CodigoEscenario="1" TipoFrase="1"></dte:Frase>
+                  </dte:Frases>
+                  <dte:Items t-foreach="move.invoice_line_ids" t-as="item">
+                    <dte:Item t-att-BienOServicio="B" t-att-NumeroLinea="1">
+                      <dte:Cantidad t-esc="item.quantity"/>
+                      <dte:UnidadMedida t-esc="uom_display"/>
+                      <dte:Descripcion t-esc="item.product_id.name"/>
+                      <dte:PrecioUnitario t-esc="item.price_unit"/>
+                      <dte:Precio t-esc="item.price_unit * item.quantity"/>
+                      <dte:Descuento t-esc="item.discount"/>
+                      <dte:Impuestos>
+                        <dte:Impuesto t-foreach="item.tax_ids" t-as="tax">
+                          <dte:NombreCorto t-esc="tax.name"/>
+                          <dte:CodigoUnidadGravable t-esc="item.codigo_unidad_gravable"/>
+                          <dte:MontoGravable t-esc="item.price_unit"/>
+                          <dte:CantidadUnidadesGravables t-if="tax.name == 'BEBIDAS ALCOHOLICAS'" t-esc="item.quantity"/>
+                          <dte:MontoImpuesto t-esc="tax.amount"/>
+                        </dte:Impuesto>
+                      </dte:Impuestos>
+                      <dte:Total t-esc="item.price_total"/>
+                    </dte:Item>
+                  </dte:Items>
+                  <dte:Totales>
+                    <dte:TotalImpuestos>
+                      <dte:TotalImpuesto t-foreach="move.amount_by_group" t-as="taxbg" t-att-NombreCorto="taxbg[0]" t-att-TotalMontoImpuesto="taxbg[1]"/>
+                    </dte:TotalImpuestos>
+                    <dte:GranTotal t-esc="move.amount_total"/>
+                  </dte:Totales>
+                  <dte:Complementos>
+                    <dte:Complemento IDComplemento="Exportacion" NombreComplemento="Exportacion" URIComplemento="http://www.sat.gob.gt/fel/exportacion.xsd">
+                      <cex:Exportacion xmlns:cex="http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0" Version="1" xsi:schemaLocation="http://www.sat.gob.gt/face2/ComplementoExportaciones/0.1.0 C:\Users\User\Desktop\FEL\Esquemas\GT_Complemento_Exportaciones-0.1.0.xsd">
+                        <cex:NombreConsignatarioODestinatario>CLIENTE DEMO</cex:NombreConsignatarioODestinatario>
+                        <cex:DireccionConsignatarioODestinatario>CIUDAD</cex:DireccionConsignatarioODestinatario>
+                        <cex:CodigoConsignatarioODestinatario>40050</cex:CodigoConsignatarioODestinatario>
+                        <cex:NombreComprador>CLIENTE DEMO</cex:NombreComprador>
+                        <cex:DireccionComprador>CIUDAD</cex:DireccionComprador>
+                        <cex:CodigoComprador>40050</cex:CodigoComprador>
+                        <cex:OtraReferencia>EXPORTACION</cex:OtraReferencia>
+                        <cex:INCOTERM>ZZZ</cex:INCOTERM>
+                        <cex:NombreExportador>DEMO</cex:NombreExportador>
+                        <cex:CodigoExportador>S00101</cex:CodigoExportador>
+                      </cex:Exportacion>
+                    </dte:Complemento>
+                  </dte:Complementos>
+                </dte:DatosEmision>
+              </dte:DTE>
+              <dte:Adenda>
+                <Documento t-esc="move.highest_name"/>
+              </dte:Adenda>
+            </dte:SAT>
+          </dte:GTDocumento >
+        </template>
+    </data>
+</odoo>
