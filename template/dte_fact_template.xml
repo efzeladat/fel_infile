@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <odoo>
     <data>
-        <template id="dte_template">
+        <template id="dte_fact_template">
           <dte:GTDocumento xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:dte="http://www.sat.gob.gt/dte/fel/0.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="0.1" xsi:schemaLocation="http://www.sat.gob.gt/dte/fel/0.1.0">
             <dte:SAT ClaseDocumento="dte">
               <dte:DTE ID="DatosCertificados">
@@ -39,7 +39,7 @@
                       <dte:Impuestos>
                         <dte:Impuesto t-foreach="item.tax_ids" t-as="tax">
                           <dte:NombreCorto t-esc="tax.name"/>
-                          <dte:CodigoUnidadGravable t-esc="item.codigo_unidad_gravable"/>
+                          <dte:CodigoUnidadGravable t-esc="item.product_id.codigo_unidad_gravable"/>
                           <dte:MontoGravable t-esc="item.price_unit"/>
                           <dte:CantidadUnidadesGravables t-if="tax.name == 'BEBIDAS ALCOHOLICAS'" t-esc="item.quantity"/>
                           <dte:MontoImpuesto t-esc="tax.amount"/>

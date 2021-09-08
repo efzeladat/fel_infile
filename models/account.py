@@ -34,7 +34,7 @@ class AccountMove(models.Model):
         if self.invoice_line_ids.product_uom_id.name == 'Unidades':
             uom = 'UND'
 
-        dte = self.env.ref('fel_infile.dte_template')._render({
+        dte = self.env.ref('fel_infile.dte_fact_template')._render({
             'move': self,
             'fecha_hora_emision': self.create_date.strftime('%Y-%m-%dT%H:%M:%S'),
             'bien_servicio': 'B',
@@ -61,24 +61,38 @@ class AccountMove(models.Model):
         invoice = r.json()
         logging.info(invoice)
 
-        return_data = self.env['fel_gt_extra.l10n_gt_infile_response'].create({
-            'result':  invoice.result,
-            'date_transaction':  invoice.date_transaction,
-            'origin':  invoice.origin,
-            'description':  invoice.description,
-            'emition_control':  invoice.emition_control,
-            'infile_alert':  invoice.infile_alert,
-            'infile_alert_description':  invoice.infile_alert_description,
-            'sat_alert':  invoice.sat_alert,
-            'sat_alert_description':  invoice.sat_alert_description,
-            'errors':  invoice.errors,
-            'error_description':  invoice.error_description,
-            'aditional_information':  invoice.aditional_information,
-            'uuid':  invoice.uuid,
-            'serie':  invoice.serie,
-            'number':  invoice.number,
-            'xml_certificado':  invoice.xml_certificado
-        })
+        certificacion_json = r.json()
+        if certificacion_json['resultado']:
+            self.firma_fel = certificacion_json['uuid']
+            self.ref = str(certificacion_json['serie'])+'-'+str(certificacion_json['numero'])
+            self.serie_fel = certificacion_json['serie']
+            self.numero_fel = certificacion_json['numero']
+            self.documento_xml_fel = certificacion_json['xml_certificado']
+            self.resultado_xml_fel = certificacion_json['xml_certificado']
+            self.pdf_fel = False
+            self.certificador_fel = 'infile'
+        else:
+            self.error_certificador(str(certificacion_json['descripcion_errores']))
+            return False
+
+        # return_data = self.env['fel_gt_extra.l10n_gt_infile_response'].create({
+        #     'result':  invoice.result,
+        #     'date_transaction':  invoice.date_transaction,
+        #     'origin':  invoice.origin,
+        #     'description':  invoice.description,
+        #     'emition_control':  invoice.emition_control,
+        #     'infile_alert':  invoice.infile_alert,
+        #     'infile_alert_description':  invoice.infile_alert_description,
+        #     'sat_alert':  invoice.sat_alert,
+        #     'sat_alert_description':  invoice.sat_alert_description,
+        #     'errors':  invoice.errors,
+        #     'error_description':  invoice.error_description,
+        #     'aditional_information':  invoice.aditional_information,
+        #     'uuid':  invoice.uuid,
+        #     'serie':  invoice.serie,
+        #     'number':  invoice.number,
+        #     'xml_certificado':  invoice.xml_certificado
+        # })
 
         return True
 
