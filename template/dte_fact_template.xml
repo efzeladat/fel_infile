@@ -29,7 +29,7 @@
                     <dte:Frase CodigoEscenario="1" TipoFrase="1"></dte:Frase>
                   </dte:Frases>
                   <dte:Items t-foreach="move.invoice_line_ids" t-as="item">
-                    <dte:Item t-att-BienOServicio="B" t-att-NumeroLinea="1">
+                    <dte:Item t-att-BienOServicio="bien_servicio" t-att-NumeroLinea="1">
                       <dte:Cantidad t-esc="item.quantity"/>
                       <dte:UnidadMedida t-esc="uom_display"/>
                       <dte:Descripcion t-esc="item.product_id.name"/>
@@ -40,7 +40,7 @@
                         <dte:Impuesto t-foreach="item.tax_ids" t-as="tax">
                           <dte:NombreCorto t-esc="tax.name"/>
                           <dte:CodigoUnidadGravable t-esc="item.product_id.codigo_unidad_gravable"/>
-                          <dte:MontoGravable t-esc="item.price_unit"/>
+                          <dte:MontoGravable t-if="tax.name == 'BEBIDAS ALCOHOLICAS'" t-esc="item.product_id.price_suggested * item.quantity"/><dte:MontoGravable t-if="tax.name != 'BEBIDAS ALCOHOLICAS'" t-esc="item.price_unit"/>
                           <dte:CantidadUnidadesGravables t-if="tax.name == 'BEBIDAS ALCOHOLICAS'" t-esc="item.quantity"/>
                           <dte:MontoImpuesto t-esc="tax.amount"/>
                         </dte:Impuesto>

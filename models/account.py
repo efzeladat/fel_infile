@@ -34,6 +34,17 @@ class AccountMove(models.Model):
         if self.invoice_line_ids.product_uom_id.name == 'Unidades':
             uom = 'UND'
 
+        for lines in self.invoice_line_ids:
+            price_by_line = (lines.price_unit - lines.discount) * lines.quantity
+            for taxes in lines.tax_ids:
+                if taxes.name == 'IVA por Pagar':
+                    taxes.name = 'IVA'
+                    taxes.amount = round(price_by_line - (price_by_line / round((1+taxes.amount/100), 2)), 2)
+                else:
+                    tmp_name = taxes.name.split(' - ')
+                    taxes.name = tmp_name[0]
+                    taxes.amount = round(lines.product_id.price_suggested * lines.quantity * lines.product_id.idb_tax_percentage, 2)
+
         dte = self.env.ref('fel_infile.dte_fact_template')._render({
             'move': self,
             'fecha_hora_emision': self.create_date.strftime('%Y-%m-%dT%H:%M:%S'),
