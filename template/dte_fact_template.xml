@@ -6,30 +6,30 @@
             <dte:SAT ClaseDocumento="dte">
               <dte:DTE ID="DatosCertificados">
                 <dte:DatosEmision ID="DatosEmision">
-                  <dte:DatosGenerales t-att-CodigoMoneda="move.currency_id.name" t-att-FechaHoraEmision="fecha_hora_emision" t-att-Tipo="FACT"/>
-                  <dte:Emisor t-att-AfiliacionIVA="move.company_id.afiliacion_iva_fel" t-att-CodigoEstablecimiento="1" t-att-CorreoEmisor="move.company_id.email" t-att-NITEmisor="move.company_id.vat" t-att-NombreComercial="move.company_id.name" t-att-NombreEmisor="move.company_id.name">
+                  <dte:DatosGenerales t-att-CodigoMoneda="move.currency_id.name" t-att-FechaHoraEmision="fecha_hora_emision" t-att-Tipo="tipo_doc"/>
+                  <dte:Emisor t-att-AfiliacionIVA="move.company_id.afiliacion_iva_fel" t-att-CodigoEstablecimiento="1" t-att-CorreoEmisor="move.company_id.email" t-att-NITEmisor="vat_company" t-att-NombreComercial="move.company_id.name" t-att-NombreEmisor="move.company_id.name">
                     <dte:DireccionEmisor>
                       <dte:Direccion t-esc="move.company_id.street"/>
                       <dte:CodigoPostal t-esc="move.company_id.zip"/>
                       <dte:Municipio t-esc="move.company_id.city"/>
                       <dte:Departamento t-esc="move.company_id.state_id.name"/>
-                      <dte:Pais t-esc="move.company_id.country_id.name"/>
+                      <dte:Pais t-esc="move.company_id.country_code"/>
                     </dte:DireccionEmisor>
                   </dte:Emisor>
-                  <dte:Receptor t-att-CorreoReceptor="move.partner_id.email" t-att-IDReceptor="move.partner_id.vat" t-att-NombreReceptor="move.partner_id.name">
+                  <dte:Receptor t-att-CorreoReceptor="move.partner_id.email" t-att-IDReceptor="vat_partner" t-att-NombreReceptor="move.partner_id.name">
                     <dte:DireccionReceptor>
                       <dte:Direccion t-esc="move.partner_id.street"/>
                       <dte:CodigoPostal t-esc="move.partner_id.zip"/>
                       <dte:Municipio t-esc="move.partner_id.city"/>
                       <dte:Departamento t-esc="move.partner_id.state_id.name"/>
-                      <dte:Pais t-esc="move.partner_id.country_id.name"/>
+                      <dte:Pais t-esc="move.partner_id.country_id.code"/>
                     </dte:DireccionReceptor>
                   </dte:Receptor>
                   <dte:Frases>
                     <dte:Frase CodigoEscenario="1" TipoFrase="1"></dte:Frase>
                   </dte:Frases>
-                  <dte:Items t-foreach="move.invoice_line_ids" t-as="item">
-                    <dte:Item t-att-BienOServicio="bien_servicio" t-att-NumeroLinea="1">
+                  <dte:Items>
+                    <dte:Item t-foreach="move.invoice_line_ids" t-as="item" t-att-BienOServicio="bien_servicio" t-att-NumeroLinea="1">
                       <dte:Cantidad t-esc="item.quantity"/>
                       <dte:UnidadMedida t-esc="uom_display"/>
                       <dte:Descripcion t-esc="item.product_id.name"/>
@@ -42,7 +42,7 @@
                           <dte:CodigoUnidadGravable t-esc="item.product_id.codigo_unidad_gravable"/>
                           <dte:MontoGravable t-if="tax.name == 'BEBIDAS ALCOHOLICAS'" t-esc="item.product_id.price_suggested * item.quantity"/><dte:MontoGravable t-if="tax.name != 'BEBIDAS ALCOHOLICAS'" t-esc="item.price_unit"/>
                           <dte:CantidadUnidadesGravables t-if="tax.name == 'BEBIDAS ALCOHOLICAS'" t-esc="item.quantity"/>
-                          <dte:MontoImpuesto t-esc="tax.amount"/>
+                          <dte:MontoImpuesto t-if="tax.name == 'BEBIDAS ALCOHOLICAS'" t-esc="item.tax_idb"/><dte:MontoImpuesto t-if="tax.name != 'BEBIDAS ALCOHOLICAS'" t-esc="item.tax_iva"/>
                         </dte:Impuesto>
                       </dte:Impuestos>
                       <dte:Total t-esc="item.price_total"/>
@@ -50,14 +50,14 @@
                   </dte:Items>
                   <dte:Totales>
                     <dte:TotalImpuestos>
-                      <dte:TotalImpuesto t-foreach="move.amount_by_group" t-as="taxbg" t-att-NombreCorto="taxbg[0]" t-att-TotalMontoImpuesto="taxbg[1]"/>
+                      <dte:TotalImpuesto t-foreach="impuestos_totales" t-as="taxbg" t-att-NombreCorto="taxbg[0]" t-att-TotalMontoImpuesto="taxbg[1]"/>
                     </dte:TotalImpuestos>
                     <dte:GranTotal t-esc="move.amount_total"/>
                   </dte:Totales>
                 </dte:DatosEmision>
               </dte:DTE>
               <dte:Adenda>
-                <Documento t-esc="move.highest_name"/>
+                <Documento t-if="move.name == '/'" t-esc="move.highest_name"/><Documento t-if="move.name != '/'" t-esc="move.name"/>
               </dte:Adenda>
             </dte:SAT>
           </dte:GTDocumento >

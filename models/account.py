@@ -14,8 +14,7 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     pdf_fel = fields.Char('PDF FEL', copy=False)
-    # infile_response_ids = fields.Many2one('InvoiceResponse', string='Respuestas Infile')
-    
+
     def _post(self, soft=True):
         if self.certificar2():
             return super(AccountMove, self)._post(soft)
@@ -25,47 +24,68 @@ class AccountMove(models.Model):
             return super(AccountMove, self).post()
 
     def certificar2(self):
-        # for factura in self:
-            # if factura.requiere_certificacion():
+
+        impuestos_totales = []
         self.ensure_one()
 
-        # dte = self.env.ref('fel_infile.ejemplo')._render()
-        self['company_id']['postal_code'] = 98713
         if self.invoice_line_ids.product_uom_id.name == 'Unidades':
             uom = 'UND'
 
         for lines in self.invoice_line_ids:
             price_by_line = (lines.price_unit - lines.discount) * lines.quantity
+            switcher = {
+                1: 0.06,
+                2: 0.075,
+                3: 0.075,
+                4: 0.075,
+                5: 0.075,
+                6: 0.085,
+                7: 0.075,
+                8: 0.075,
+            }
+            idb_tax_percentage = switcher.get(int(lines.product_id.codigo_unidad_gravable), 0)
             for taxes in lines.tax_ids:
-                if taxes.name == 'IVA por Pagar':
+                if taxes.name == 'IVA por Pagar' or taxes.name == 'IVA':
                     taxes.name = 'IVA'
-                    taxes.amount = round(price_by_line - (price_by_line / round((1+taxes.amount/100), 2)), 2)
+                    lines.tax_iva = round(price_by_line - (price_by_line / round((1+taxes.amount/100), 2)), 2)
                 else:
                     tmp_name = taxes.name.split(' - ')
                     taxes.name = tmp_name[0]
-                    taxes.amount = round(lines.product_id.price_suggested * lines.quantity * lines.product_id.idb_tax_percentage, 2)
+                    lines.tax_idb = round(lines.product_id.price_suggested * lines.quantity * idb_tax_percentage, 2)
+
+        for taxx in self.amount_by_group:
+            if taxx[0] == 'Impuestos':
+                impuestos_totales.append(['BEBIDAS ALCOHOLICAS', taxx[1]])
+            else:
+                impuestos_totales.append(['IVA', taxx[1]])
+
+        vat_company = self.company_id.vat.split('-')
+        vat_company = vat_company[0] + vat_company[1]
+        vat_partner = self.partner_id.vat.split('-')
+        vat_partner = vat_partner[0] + vat_company[1]
 
         dte = self.env.ref('fel_infile.dte_fact_template')._render({
             'move': self,
+            'tipo_doc': 'FACT',
             'fecha_hora_emision': self.create_date.strftime('%Y-%m-%dT%H:%M:%S'),
             'bien_servicio': 'B',
             'uom_display': uom,
+            'impuestos_totales': impuestos_totales,
+            'vat_company': vat_company,
+            'vat_partner': vat_partner
         })
 
-        # dte = factura.dte_documento() Documento Edi
-        # logging.warn(dte)
-        dte = unescape(dte.decode('utf-8')).replace(r'&', '&amp;')
-
+        dte = unescape(dte.decode('ISO-8859-1')).replace(r'&', '&amp;').replace('\n', '')
+        # dte = dte..replace(r'&', '&amp;')
         logging.info(dte)
-
         data = dte
 
         headers = {
             'UsuarioApi': 'GBILSTE',
-            'LlaveApi': '3F4664818CB5EE4C250E78443C6616B6',
+            'LlaveApi': '656fb5fafafd6987e4f87e9577b811f7',
             'UsuarioFirma': 'GBILSTE',
-            'LlaveFirma': '656fb5fafafd6987e4f87e9577b811f7',
-            'identificador': 'prueba-1'
+            'LlaveFirma': '3F4664818CB5EE4C250E78443C6616B6',
+            'identificador': 'prueba1'
         }
         r = requests.post('https://certificadorcloud.feel.com.gt/fel/procesounificado/transaccion/v2/xml', data=data,
                           headers=headers)
@@ -85,25 +105,6 @@ class AccountMove(models.Model):
         else:
             self.error_certificador(str(certificacion_json['descripcion_errores']))
             return False
-
-        # return_data = self.env['fel_gt_extra.l10n_gt_infile_response'].create({
-        #     'result':  invoice.result,
-        #     'date_transaction':  invoice.date_transaction,
-        #     'origin':  invoice.origin,
-        #     'description':  invoice.description,
-        #     'emition_control':  invoice.emition_control,
-        #     'infile_alert':  invoice.infile_alert,
-        #     'infile_alert_description':  invoice.infile_alert_description,
-        #     'sat_alert':  invoice.sat_alert,
-        #     'sat_alert_description':  invoice.sat_alert_description,
-        #     'errors':  invoice.errors,
-        #     'error_description':  invoice.error_description,
-        #     'aditional_information':  invoice.aditional_information,
-        #     'uuid':  invoice.uuid,
-        #     'serie':  invoice.serie,
-        #     'number':  invoice.number,
-        #     'xml_certificado':  invoice.xml_certificado
-        # })
 
         return True
 
@@ -231,5 +232,8 @@ class ResOffice(models.Model):
     description = fields.Char()
     code = fields.Char()
 
+class AccountMoveLine(models.Model):
+    _inherit = 'account.move.line'
 
-
+    tax_iva = fields.Float('iva')
+    tax_idb = fields.Float('idb')
