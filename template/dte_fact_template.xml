@@ -28,7 +28,7 @@
                   <dte:Frases>
                     <dte:Frase CodigoEscenario="1" TipoFrase="1"></dte:Frase>
                   </dte:Frases>
-                  <dte:Items>FACT
+                  <dte:Items>
                     <dte:Item t-foreach="move.invoice_line_ids" t-as="item" t-att-BienOServicio="bien_servicio" t-att-NumeroLinea="1">
                       <dte:Cantidad t-esc="item.quantity"/>
                       <dte:UnidadMedida t-esc="uom_display"/>
