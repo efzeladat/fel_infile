@@ -14,6 +14,12 @@ class AccountMove(models.Model):
     _inherit = 'account.move'
 
     pdf_fel = fields.Char('PDF FEL', copy=False)
+    establecimiento = fields.Selection([
+        ('1', 'Grupo de Alimentos y Bebidas Bilste'),
+        ('2', 'Magnolia'),
+        ('3', 'Deposito San Arnoldo'),
+        ('4', 'San Arnoldo 2'),
+    ], required=True, string='Establecimiento')
 
     def _post(self, soft=True):
         if self.certificar2():
@@ -75,17 +81,17 @@ class AccountMove(models.Model):
             'vat_partner': vat_partner
         })
 
-        dte = unescape(dte.decode('ISO-8859-1')).replace(r'&', '&amp;').replace('\n', '')
+        dte = unescape(dte.decode('utf-8')).replace(r'&', '&amp;').replace('\n', '').encode('utf-8')
         # dte = dte..replace(r'&', '&amp;')
         logging.info(dte)
         data = dte
 
         headers = {
             'UsuarioApi': 'GBILSTE',
-            'LlaveApi': '656fb5fafafd6987e4f87e9577b811f7',
+            'LlaveApi': '3F4664818CB5EE4C250E78443C6616B6',
             'UsuarioFirma': 'GBILSTE',
-            'LlaveFirma': '3F4664818CB5EE4C250E78443C6616B6',
-            'identificador': 'prueba1'
+            'LlaveFirma': '656fb5fafafd6987e4f87e9577b811f7',
+            'identificador': 'prueba1',
         }
         r = requests.post('https://certificadorcloud.feel.com.gt/fel/procesounificado/transaccion/v2/xml', data=data,
                           headers=headers)

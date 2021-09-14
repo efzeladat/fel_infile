@@ -7,7 +7,7 @@
               <dte:DTE ID="DatosCertificados">
                 <dte:DatosEmision ID="DatosEmision">
                   <dte:DatosGenerales t-att-CodigoMoneda="move.currency_id.name" t-att-FechaHoraEmision="fecha_hora_emision" t-att-Tipo="tipo_doc"/>
-                  <dte:Emisor t-att-AfiliacionIVA="move.company_id.afiliacion_iva_fel" t-att-CodigoEstablecimiento="1" t-att-CorreoEmisor="move.company_id.email" t-att-NITEmisor="vat_company" t-att-NombreComercial="move.company_id.name" t-att-NombreEmisor="move.company_id.name">
+                  <dte:Emisor t-att-AfiliacionIVA="move.company_id.afiliacion_iva_fel" t-att-CodigoEstablecimiento="move.establecimiento" t-att-CorreoEmisor="move.company_id.email" t-att-NITEmisor="vat_company" t-att-NombreComercial="move.company_id.name" t-att-NombreEmisor="move.company_id.name">
                     <dte:DireccionEmisor>
                       <dte:Direccion t-esc="move.company_id.street"/>
                       <dte:CodigoPostal t-esc="move.company_id.zip"/>
@@ -28,7 +28,7 @@
                   <dte:Frases>
                     <dte:Frase CodigoEscenario="1" TipoFrase="1"></dte:Frase>
                   </dte:Frases>
-                  <dte:Items>
+                  <dte:Items>FACT
                     <dte:Item t-foreach="move.invoice_line_ids" t-as="item" t-att-BienOServicio="bien_servicio" t-att-NumeroLinea="1">
                       <dte:Cantidad t-esc="item.quantity"/>
                       <dte:UnidadMedida t-esc="uom_display"/>
@@ -60,7 +60,7 @@
                 <Documento t-if="move.name == '/'" t-esc="move.highest_name"/><Documento t-if="move.name != '/'" t-esc="move.name"/>
               </dte:Adenda>
             </dte:SAT>
-          </dte:GTDocumento >
+          </dte:GTDocumento>
         </template>
     </data>
 </odoo>

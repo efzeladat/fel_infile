@@ -1,47 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
-    <data>
+<odoo>
 
-<!--        <record model="ir.ui.view" id="invoice_form_fel_infile">-->
-<!--            <field name="name">account.invoice.form.fel_infile</field>-->
-<!--            <field name="model">account.invoice</field>-->
-<!--            <field name="inherit_id" ref="fel_gt.invoice_form_fel_gt"/>-->
-<!--            <field name="arch" type="xml">-->
-<!--                <data>-->
-<!--                    <field name="resultado_xml_fel" position="after">-->
-<!--                        <field name="pdf_fel" widget="url"/>-->
-<!--                    </field>-->
-<!--                </data>-->
-<!--            </field>-->
-<!--        </record>-->
+    <record id="invoice_form_fel_gt_extra2" model="ir.ui.view">
+        <field name="name">account.move.form.fel_gt_extra2</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='payment_reference']" position="after">
+                <field name="establecimiento"/>
+            </xpath>
+        </field>
+    </record>
 
-<!--        <record model="ir.ui.view" id="invoice_supplier_form_fel_infile">-->
-<!--            <field name="name">account.invoice.supplier.form.fel_infile</field>-->
-<!--            <field name="model">account.invoice</field>-->
-<!--            <field name="inherit_id" ref="fel_gt.invoice_supplier_form_fel_gt"/>-->
-<!--            <field name="arch" type="xml">-->
-<!--                <data>-->
-<!--                    <field name="resultado_xml_fel" position="after">-->
-<!--                        <field name="pdf_fel" widget="url"/>-->
-<!--                    </field>-->
-<!--                </data>-->
-<!--            </field>-->
-<!--        </record>-->
-
-<!--        <record model="ir.ui.view" id="journal_form_fel_infile">-->
-<!--            <field name="name">account.journal.form.fel_infile</field>-->
-<!--            <field name="model">account.journal</field>-->
-<!--            <field name="inherit_id" ref="fel_gt.journal_form_fel_gt"/>-->
-<!--            <field name="arch" type="xml">-->
-<!--                <data>-->
-<!--                    <field name="tipo_documento_fel" position="after">-->
-<!--                        <field name="usuario_fel"/>-->
-<!--                        <field name="clave_fel"/>-->
-<!--                        <field name="token_firma_fel"/>-->
-<!--                    </field>-->
-<!--                </data>-->
-<!--            </field>-->
-<!--        </record>-->
-
-    </data>
-</openerp>
+</odoo>
